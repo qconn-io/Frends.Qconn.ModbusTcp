@@ -1,0 +1,15 @@
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/bin/Release/net8.0/FrendsTaskMetadata.json
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/bin/Release/net8.0/Frends.ModbusTcp.deps.json
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/bin/Release/net8.0/Frends.ModbusTcp.dll
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/bin/Release/net8.0/Frends.ModbusTcp.pdb
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/bin/Release/net8.0/Frends.ModbusTcp.xml
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/obj/Release/net8.0/Frends.ModbusTcp.csproj.AssemblyReference.cache
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/obj/Release/net8.0/Frends.ModbusTcp.GeneratedMSBuildEditorConfig.editorconfig
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/obj/Release/net8.0/Frends.ModbusTcp.AssemblyInfoInputs.cache
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/obj/Release/net8.0/Frends.ModbusTcp.AssemblyInfo.cs
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/obj/Release/net8.0/Frends.ModbusTcp.csproj.CoreCompileInputs.cache
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/obj/Release/net8.0/Frends.ModbusTcp.dll
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/obj/Release/net8.0/refint/Frends.ModbusTcp.dll
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/obj/Release/net8.0/Frends.ModbusTcp.xml
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/obj/Release/net8.0/Frends.ModbusTcp.pdb
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/obj/Release/net8.0/ref/Frends.ModbusTcp.dll

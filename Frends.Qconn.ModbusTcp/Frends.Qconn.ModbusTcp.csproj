@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Version>1.0.0</Version>
+        <PackageId>Frends.Qconn.ModbusTcp</PackageId>
+        <AssemblyName>Frends.Qconn.ModbusTcp</AssemblyName>
+        <RootNamespace>Frends.Qconn.ModbusTcp</RootNamespace>
+        <Authors>Frends</Authors>
+        <Copyright>Copyright (c) 2026 Frends EiPaaS</Copyright>
+        <Company>Frends</Company>
+        <Product>Frends</Product>
+        <PackageTags>Frends Modbus TCP</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <Description>Read values from Modbus TCP slave devices</Description>
+        <PackageProjectUrl>https://frends.com/</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/FrendsPlatform/Frends.Qconn.ModbusTcp</RepositoryUrl>
+        <Nullable>enable</Nullable>
+        <NoWarn>$(NoWarn);CS1591;FT0001;FT0002;FT0003;FT0007;FT0010;FT0012;FT0014;FT0015;FT0016;FT0017;FT0018;SA1025;SA1117;SA1201;SA1402;SA1413;SA1519;SA1028;SA1122;SA1512;SA1516;SA1611;SA1615;SA1642;SA1649</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="NModbus" Version="3.*" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.*" />
+        <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="FrendsTaskAnalyzers" Version="1.*">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="migration.json" PackagePath="/" Pack="true"/>
+        <Content Include="../CHANGELOG.md" PackagePath="/" Pack="true"/>
+        <Content Include="FrendsTaskMetadata.json"
+                 Pack="true"
+                 PackagePath="/"
+                 CopyToOutputDirectory="PreserveNewest" />
+        <AdditionalFiles Include="FrendsTaskMetadata.json" />
+    </ItemGroup>
+</Project>

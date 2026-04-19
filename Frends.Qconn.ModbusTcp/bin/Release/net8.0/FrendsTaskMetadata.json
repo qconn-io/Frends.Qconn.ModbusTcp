@@ -1,0 +1,10 @@
+{
+  "Tasks": [
+    {
+      "TaskMethod": "Frends.ModbusTcp.Read.Read.ReadData"
+    },
+    {
+      "TaskMethod": "Frends.ModbusTcp.ReadBatch.ReadBatch.ReadBatchData"
+    }
+  ]
+}

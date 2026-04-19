@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Frends.ModbusTcp</id>
+    <version>1.0.0</version>
+    <authors>Frends</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <projectUrl>https://frends.com/</projectUrl>
+    <description>Read values from Modbus TCP slave devices</description>
+    <copyright>Copyright (c) 2026 Frends EiPaaS</copyright>
+    <tags>Frends Modbus TCP</tags>
+    <repository type="git" url="https://github.com/FrendsPlatform/Frends.ModbusTcp" />
+    <dependencies>
+      <group targetFramework="net8.0">
+        <dependency id="NModbus" version="3.0.83" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.4" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/bin/Release/net8.0/Frends.ModbusTcp.dll" target="lib/net8.0/Frends.ModbusTcp.dll" />
+    <file src="/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/bin/Release/net8.0/Frends.ModbusTcp.xml" target="lib/net8.0/Frends.ModbusTcp.xml" />
+    <file src="/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/migration.json" target="/migration.json" />
+    <file src="/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/CHANGELOG.md" target="/CHANGELOG.md" />
+    <file src="/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.ModbusTcp/FrendsTaskMetadata.json" target="/FrendsTaskMetadata.json" />
+  </files>
+</package>

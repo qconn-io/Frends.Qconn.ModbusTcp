@@ -1,0 +1,15 @@
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/bin/Debug/net8.0/FrendsTaskMetadata.json
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/bin/Debug/net8.0/Frends.Qconn.ModbusTcp.deps.json
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/bin/Debug/net8.0/Frends.Qconn.ModbusTcp.dll
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/bin/Debug/net8.0/Frends.Qconn.ModbusTcp.pdb
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/bin/Debug/net8.0/Frends.Qconn.ModbusTcp.xml
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/obj/Debug/net8.0/Frends.Qconn.ModbusTcp.csproj.AssemblyReference.cache
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/obj/Debug/net8.0/Frends.Qconn.ModbusTcp.GeneratedMSBuildEditorConfig.editorconfig
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/obj/Debug/net8.0/Frends.Qconn.ModbusTcp.AssemblyInfoInputs.cache
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/obj/Debug/net8.0/Frends.Qconn.ModbusTcp.AssemblyInfo.cs
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/obj/Debug/net8.0/Frends.Qconn.ModbusTcp.csproj.CoreCompileInputs.cache
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/obj/Debug/net8.0/Frends.Qconn.ModbusTcp.dll
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/obj/Debug/net8.0/refint/Frends.Qconn.ModbusTcp.dll
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/obj/Debug/net8.0/Frends.Qconn.ModbusTcp.xml
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/obj/Debug/net8.0/Frends.Qconn.ModbusTcp.pdb
+/Users/mkogan/tools/work/modbus/Frends.ModbusTcp/Frends.Qconn.ModbusTcp/obj/Debug/net8.0/ref/Frends.Qconn.ModbusTcp.dll

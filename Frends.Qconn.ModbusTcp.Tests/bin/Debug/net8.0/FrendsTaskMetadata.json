@@ -1,0 +1,10 @@
+{
+  "Tasks": [
+    {
+      "TaskMethod": "Frends.Qconn.ModbusTcp.Read.Read.ReadData"
+    },
+    {
+      "TaskMethod": "Frends.Qconn.ModbusTcp.ReadBatch.ReadBatch.ReadBatchData"
+    }
+  ]
+}

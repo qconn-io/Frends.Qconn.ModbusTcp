@@ -1,0 +1,12 @@
+﻿[
+  {
+    "Task": "Frends.Qconn.ModbusTcp.Read",
+    "Migrations": [
+      {
+        "Version": "1.0.0",
+        "Description": "",
+        "Migration": []
+      }
+    ]
+  }
+]

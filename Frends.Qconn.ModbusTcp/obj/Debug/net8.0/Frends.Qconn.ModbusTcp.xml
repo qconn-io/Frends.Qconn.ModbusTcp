@@ -1,0 +1,436 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Frends.Qconn.ModbusTcp</name>
+    </assembly>
+    <members>
+        <member name="T:Frends.Qconn.ModbusTcp.Internal.ModbusConnection">
+            <summary>TCP connection helpers with timeout and cancellation support.</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.Internal.ModbusConnection.ConnectAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>Connects to a Modbus TCP slave with an independent connect timeout.
+            Throws TimeoutException if the timeout expires before the connection is established.
+            Throws SocketException if the connection is refused or the host is unreachable.
+            </summary>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.Internal.ModbusDecoder">
+            <summary>Pure stateless decoder: ushort[] → typed values with endianness and scale/offset.</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.Internal.ModbusDecoder.TranslateAddress(System.UInt16,Frends.Qconn.ModbusTcp.Read.Definitions.AddressingMode)">
+            <summary>Translates a user-supplied StartAddress to the wire address per AddressingMode.</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.Internal.ModbusDecoder.ComputeRegisterCount(Frends.Qconn.ModbusTcp.Read.Definitions.ModbusValueType,System.UInt16)">
+            <summary>Returns the number of 16-bit registers needed on the wire for the given value type and count.
+            For AsciiString, numberOfValues IS the register count (spec: NumberOfValues interpreted as registers).</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.Internal.ModbusDecoder.Decode(System.UInt16[],Frends.Qconn.ModbusTcp.Read.Definitions.ModbusValueType,Frends.Qconn.ModbusTcp.Read.Definitions.ByteOrder,System.Int32,System.Double,System.Double)">
+            <summary>Decodes a ushort[] register array into a typed value array (or string), applying scale and offset.</summary>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.Read.Definitions.AddressingMode">
+            <summary>Addressing convention used when interpreting the StartAddress field.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.AddressingMode.ZeroBased">
+            <summary>Addresses are sent on the wire as-is. Matches Modbus PDU spec and most modern device manuals.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.AddressingMode.ModiconOneBased">
+            <summary>Legacy Modicon 1-based addressing: address 40001 maps to holding register 0 on the wire.
+            Subtracts 1 and strips leading 4xxxx/3xxxx/1xxxx range prefix if present.
+            Use when your device manual shows addresses like "40001" or "30001".</summary>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.Read.Definitions.ByteOrder">
+            <summary>Byte and word order for multi-register values (Int32, UInt32, Float32, Float64).
+            Letters A-D denote bytes from most-significant (A) to least-significant (D) of the decoded value.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ByteOrder.BigEndian">
+            <summary>ABCD: high word first, high byte first. Modbus spec default. Most PLCs and modern devices.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ByteOrder.LittleEndian">
+            <summary>DCBA: low word first, low byte first. Full little-endian byte order.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ByteOrder.BigEndianByteSwap">
+            <summary>BADC: high word first, bytes swapped within each 16-bit word.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ByteOrder.LittleEndianWordSwap">
+            <summary>CDAB: low word first, high byte first within each 16-bit word.
+            Modicon/Schneider convention; also common on many energy meters (WattNode, etc.).</summary>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics">
+            <summary>Timing and connection metrics for the read operation. Always populated, including on failure.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics.ConnectTimeMs">
+            <summary>Time spent establishing the TCP connection, in milliseconds.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics.ReadTimeMs">
+            <summary>Time spent waiting for the Modbus response after the connection was established, in milliseconds.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics.TotalTimeMs">
+            <summary>Total wall-clock time for the operation, in milliseconds.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics.AttemptCount">
+            <summary>Number of read attempts made. Always 1 in v1.0 — placeholder for v1.1 retry support.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics.Host">
+            <summary>Hostname or IP address used for the connection.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics.Port">
+            <summary>TCP port used for the connection.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics.UnitId">
+            <summary>Modbus unit ID sent in the request.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics.WireStartAddress">
+            <summary>Start address as sent on the wire, after AddressingMode translation.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics.WireRegisterCount">
+            <summary>Number of registers requested on the wire. For multi-word types, this is greater than NumberOfValues.</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics.#ctor(System.Int64,System.Int64,System.Int64,System.String,System.Int32,System.Byte,System.UInt16,System.UInt16,System.Int32)">
+            <summary>Initializes a new Diagnostics instance.</summary>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorCategory">
+            <summary>High-level error category for routing in Process Exclusive Decision shapes.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorCategory.None">
+            <summary>No error.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorCategory.Timeout">
+            <summary>TCP connect or read timed out. Likely transient.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorCategory.ConnectionRefused">
+            <summary>Connection was actively refused by the target host. Often transient.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorCategory.HostUnreachable">
+            <summary>Target host is unreachable at the network level. Often transient.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorCategory.Cancelled">
+            <summary>Operation was cancelled via CancellationToken.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorCategory.ModbusException">
+            <summary>Modbus slave returned an exception response (exception codes 1–11).</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorCategory.DecodingError">
+            <summary>Wire read succeeded but type decoding failed (e.g. invalid bytes for AsciiString).</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorCategory.InvalidInput">
+            <summary>Invalid input parameters (bad address, count out of range, etc.). Not retryable.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorCategory.Unexpected">
+            <summary>Unexpected error not covered by other categories.</summary>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorDetail">
+            <summary>Structured error information returned when Success is false.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorDetail.Category">
+            <summary>High-level error category. Use this for Process routing logic.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorDetail.IsTransient">
+            <summary>True if retrying the same request later is likely to succeed.
+            True for: Timeout, ConnectionRefused, HostUnreachable, SlaveDeviceBusy (code 6), GatewayPathUnavailable (code 10),
+            GatewayTargetDeviceFailedToRespond (code 11).
+            False for: IllegalFunction (1), IllegalDataAddress (2), IllegalDataValue (3), DecodingError, InvalidInput, and others.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorDetail.ModbusExceptionCode">
+            <summary>Modbus exception code if the slave returned one (1–11 per spec), else null.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorDetail.SocketErrorCode">
+            <summary>Socket error code string if the failure was at TCP level, else null.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorDetail.Message">
+            <summary>Human-readable summary for logs. Do not route Process logic on this string — use Category instead.</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.Read.Definitions.ErrorDetail.#ctor(Frends.Qconn.ModbusTcp.Read.Definitions.ErrorCategory,System.Boolean,System.String,System.Nullable{System.Int32},System.String)">
+            <summary>Initializes a new ErrorDetail.</summary>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.Read.Definitions.Input">
+            <summary>Parameters for a single Modbus TCP read operation.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Input.Host">
+            <summary>IP address or hostname of the Modbus TCP slave device.</summary>
+            <example>192.168.1.100</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Input.Port">
+            <summary>TCP port of the Modbus TCP slave. Standard Modbus port is 502.</summary>
+            <example>502</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Input.UnitId">
+            <summary>Modbus unit ID (slave address). Most devices use 1.
+            Modbus/TCP-to-RTU gateways often use 247 or 255.</summary>
+            <example>1</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Input.DataType">
+            <summary>Modbus data type to read. Determines which function code is used:
+            Coils (FC01), DiscreteInputs (FC02), HoldingRegisters (FC03), InputRegisters (FC04).</summary>
+            <example>HoldingRegisters</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Input.StartAddress">
+            <summary>Starting register address. For zero-based addressing (default) this is the raw PDU address.
+            For Modicon one-based addressing, use the address as shown in your device manual (e.g. 40001).</summary>
+            <example>0</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Input.NumberOfValues">
+            <summary>Number of typed values to read. The Task automatically converts this to the correct
+            register count: Float32 = 2 registers each, Float64 = 4 registers each, others = 1 register each.
+            For AsciiString, this is the number of registers (2 ASCII characters per register).</summary>
+            <example>1</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Input.ValueType">
+            <summary>How to interpret the raw 16-bit register words. Ignored for Coils and DiscreteInputs
+            (those always return bool[]). Raw returns ushort[] unchanged.</summary>
+            <example>Float32</example>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusDataType">
+            <summary>Modbus data type (function code selection).</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusDataType.Coils">
+            <summary>Coil outputs (FC01). Single-bit, read-write. Returns bool[].</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusDataType.DiscreteInputs">
+            <summary>Discrete inputs (FC02). Single-bit, read-only. Returns bool[].</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusDataType.HoldingRegisters">
+            <summary>Holding registers (FC03). 16-bit, read-write. Most common.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusDataType.InputRegisters">
+            <summary>Input registers (FC04). 16-bit, read-only.</summary>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusValueType">
+            <summary>How to interpret the raw 16-bit register words returned from the device.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusValueType.Raw">
+            <summary>Raw 16-bit values. Returns ushort[] for register types, bool[] for coil types.
+            Use when you need the raw wire data (e.g. to pass through to a downstream system unchanged).</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusValueType.Int16">
+            <summary>Signed 16-bit integer. One register per value.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusValueType.UInt16">
+            <summary>Unsigned 16-bit integer. One register per value.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusValueType.Int32">
+            <summary>Signed 32-bit integer. Two registers per value. Byte/word order from Options.ByteOrder.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusValueType.UInt32">
+            <summary>Unsigned 32-bit integer. Two registers per value. Byte/word order from Options.ByteOrder.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusValueType.Float32">
+            <summary>IEEE-754 single-precision float. Two registers per value. Byte/word order from Options.ByteOrder.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusValueType.Float64">
+            <summary>IEEE-754 double-precision float. Four registers per value. Byte/word order from Options.ByteOrder.</summary>
+        </member>
+        <member name="F:Frends.Qconn.ModbusTcp.Read.Definitions.ModbusValueType.AsciiString">
+            <summary>ASCII string. NumberOfValues is interpreted as number of registers (2 chars each); returns a single
+            string with null-padding trimmed.</summary>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.Read.Definitions.Options">
+            <summary>Behavioral options for the Modbus TCP read operation.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Options.ByteOrder">
+            <summary>Byte and word order for multi-register values (Int32, UInt32, Float32, Float64).
+            Ignored for Raw, Int16, UInt16, AsciiString, and coil reads.
+            Default is BigEndian (high word first, high byte first) — Modbus spec default.
+            Use LittleEndianWordSwap for Modicon/Schneider-style "low word first".
+            Check your device manual; mismatch here is the #1 cause of wrong readings.</summary>
+            <example>BigEndian</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Options.AddressingMode">
+            <summary>Addressing convention. ZeroBased = the address is sent on the wire as-is (matches Modbus PDU spec).
+            ModiconOneBased = subtract 1 from the address before sending, and strip leading 4xxxx/3xxxx/1xxxx prefix
+            if present. Use ModiconOneBased when your device manual shows addresses like "40001".</summary>
+            <example>ZeroBased</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Options.Scale">
+            <summary>Linear scale factor applied to decoded numeric values: output = (raw * Scale) + Offset.
+            Example: meter returns 2304 for 230.4 V → use Scale = 0.1.
+            Applied only to numeric ValueTypes; never to Raw, AsciiString, or coil reads.</summary>
+            <example>1.0</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Options.Offset">
+            <summary>Offset added after Scale: output = (raw * Scale) + Offset. See Scale.</summary>
+            <example>0.0</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Options.ConnectTimeoutMs">
+            <summary>TCP socket connect timeout in milliseconds.</summary>
+            <example>5000</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Options.ReadTimeoutMs">
+            <summary>Per-read timeout in milliseconds. Does not cover connect time; see ConnectTimeoutMs.</summary>
+            <example>5000</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Options.ThrowOnFailure">
+            <summary>If true, the Task throws an exception instead of returning a Result with Success=false.
+            Default false. Frends convention: prefer structured Results so Processes can route with
+            Exclusive Decision shapes rather than error handlers.</summary>
+            <example>false</example>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.Read.Definitions.Result">
+            <summary>Result of a Modbus TCP read operation.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Result.Success">
+            <summary>True if the read completed without error and decoding succeeded.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Result.Data">
+            <summary>
+            Decoded data. Shape depends on Input.DataType and Input.ValueType:
+              Coils / DiscreteInputs           → bool[]
+              Registers + Raw                  → ushort[]
+              Registers + Int16                → short[] (or double[] if Scale/Offset applied)
+              Registers + UInt16               → ushort[] (or double[] if Scale/Offset applied)
+              Registers + Int32 / UInt32       → int[] or uint[] (or double[] if Scale/Offset applied)
+              Registers + Float32              → float[] (or double[] if Scale/Offset applied)
+              Registers + Float64              → double[]
+              Registers + AsciiString          → string
+            Null when Success is false.
+            </summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Result.FirstValue">
+            <summary>Convenience accessor: Data cast and first element returned when Data is a non-empty array,
+            or Data itself when Data is a string. Null when Success is false or Data is empty.
+            Useful for the common single-value read case.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Result.RawRegisters">
+            <summary>Raw 16-bit register values as received from the wire, before typing and scaling.
+            Populated for all register reads regardless of ValueType, to aid debugging.
+            Null for Coil and DiscreteInput reads.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Result.Error">
+            <summary>Structured error information when Success is false; null when Success is true.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.Read.Definitions.Result.Diagnostics">
+            <summary>Timing and connection metrics. Always populated, including on failure.</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.Read.Definitions.Result.#ctor(System.Object,System.UInt16[],Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics)">
+            <summary>Initializes a successful Result.</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.Read.Definitions.Result.#ctor(Frends.Qconn.ModbusTcp.Read.Definitions.ErrorDetail,Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics)">
+            <summary>Initializes a failed Result.</summary>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.Read.Read">
+            <summary>Frends Task for reading typed, scaled values from Modbus TCP slave devices.</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.Read.Read.ReadData(Frends.Qconn.ModbusTcp.Read.Definitions.Input,Frends.Qconn.ModbusTcp.Read.Definitions.Options,System.Threading.CancellationToken)">
+            <summary>
+            Reads one or more values from a Modbus TCP slave device and returns typed, endianness-corrected,
+            scale-adjusted output. Supports coils, discrete inputs, holding registers, and input registers.
+            Returns a structured Result — check Result.Success before using Result.Data.
+            </summary>
+            <param name="input">Connection and register parameters.</param>
+            <param name="options">Timeout, byte order, scale, and error-handling options.</param>
+            <param name="cancellationToken">Propagated from the Frends Agent; propagates correctly on Process abort.</param>
+            <returns>Result containing typed data, raw registers for debugging, error details, and timing diagnostics.</returns>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchInput">
+            <summary>Input for a batched Modbus TCP read operation over a single TCP connection.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchInput.Host">
+            <summary>IP address or hostname of the Modbus TCP slave device.</summary>
+            <example>192.168.1.100</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchInput.Port">
+            <summary>TCP port of the Modbus TCP slave. Standard Modbus port is 502.</summary>
+            <example>502</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchInput.UnitId">
+            <summary>Modbus unit ID (slave address). Most devices use 1.</summary>
+            <example>1</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchInput.Items">
+            <summary>List of register reads to execute over the single TCP connection.
+            IMPORTANT: A Modbus exception on one item does not abort the batch — only socket-level failures do.
+            Each item reports its own success/error in BatchResult.Items.</summary>
+            <example>[{ "Name": "Power", "DataType": "HoldingRegisters", "StartAddress": 0, "NumberOfValues": 1, "ValueType": "Float32" }]</example>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchReadItem">
+            <summary>Specification for a single read within a batch operation.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchReadItem.Name">
+            <summary>Name used as the dictionary key in BatchResult.Items. Must be unique within the batch.</summary>
+            <example>ActivePower</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchReadItem.DataType">
+            <summary>Modbus data type to read for this item.</summary>
+            <example>HoldingRegisters</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchReadItem.StartAddress">
+            <summary>Starting register address for this item.</summary>
+            <example>0</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchReadItem.NumberOfValues">
+            <summary>Number of typed values to read for this item.</summary>
+            <example>1</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchReadItem.ValueType">
+            <summary>How to interpret the raw register words for this item.</summary>
+            <example>Float32</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchReadItem.Scale">
+            <summary>Scale factor for this item: output = (raw * Scale) + Offset.</summary>
+            <example>1.0</example>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchReadItem.Offset">
+            <summary>Offset for this item: output = (raw * Scale) + Offset.</summary>
+            <example>0.0</example>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.ReadOutcome">
+            <summary>Result of a single read item within a batch operation.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.ReadOutcome.Success">
+            <summary>True if this individual item was read and decoded successfully.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.ReadOutcome.Data">
+            <summary>Decoded data for this item. Shape depends on DataType and ValueType. Null on failure.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.ReadOutcome.FirstValue">
+            <summary>First element of Data, or Data itself for strings. Null on failure or empty data.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.ReadOutcome.RawRegisters">
+            <summary>Raw 16-bit register values from the wire before typing/scaling. Null for coil reads or on failure.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.ReadOutcome.Error">
+            <summary>Error details when Success is false; null when Success is true.</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.ReadOutcome.#ctor(System.Object,System.UInt16[])">
+            <summary>Initializes a successful ReadOutcome.</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.ReadOutcome.#ctor(Frends.Qconn.ModbusTcp.Read.Definitions.ErrorDetail)">
+            <summary>Initializes a failed ReadOutcome.</summary>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchResult">
+            <summary>Result of a batched Modbus TCP read operation.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchResult.Success">
+            <summary>True unless a socket-level failure aborted the entire batch.
+            Individual item Modbus exceptions do NOT set this to false — check each item in Items.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchResult.Items">
+            <summary>Per-item results keyed by BatchReadItem.Name. Contains outcomes for all items
+            that were attempted before any socket-level failure.</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchResult.Diagnostics">
+            <summary>Batch-level diagnostics (connect time, total time, etc.).</summary>
+        </member>
+        <member name="P:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchResult.Error">
+            <summary>Set only when a socket-level failure aborted the batch early. Null on full success or per-item failures.</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchResult.#ctor(System.Collections.Generic.Dictionary{System.String,Frends.Qconn.ModbusTcp.ReadBatch.Definitions.ReadOutcome},Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics)">
+            <summary>Initializes a successful (or partially-failed) BatchResult.</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchResult.#ctor(System.Collections.Generic.Dictionary{System.String,Frends.Qconn.ModbusTcp.ReadBatch.Definitions.ReadOutcome},Frends.Qconn.ModbusTcp.Read.Definitions.Diagnostics,Frends.Qconn.ModbusTcp.Read.Definitions.ErrorDetail)">
+            <summary>Initializes a BatchResult aborted by a socket-level failure.</summary>
+        </member>
+        <member name="T:Frends.Qconn.ModbusTcp.ReadBatch.ReadBatch">
+            <summary>Frends Task for reading multiple register blocks from a Modbus TCP slave over a single TCP connection.</summary>
+        </member>
+        <member name="M:Frends.Qconn.ModbusTcp.ReadBatch.ReadBatch.ReadBatchData(Frends.Qconn.ModbusTcp.ReadBatch.Definitions.BatchInput,Frends.Qconn.ModbusTcp.Read.Definitions.Options,System.Threading.CancellationToken)">
+            <summary>
+            Opens one TCP connection and executes all reads in Input.Items sequentially, then closes.
+            A Modbus exception on one item fails that item but does not abort the batch.
+            A socket-level failure aborts the entire batch and sets BatchResult.Success = false.
+            </summary>
+            <param name="input">Connection info and list of register reads to perform.</param>
+            <param name="options">Timeout, byte order, and error-handling options (shared across all items).</param>
+            <param name="cancellationToken">Propagated from the Frends Agent.</param>
+            <returns>BatchResult with per-item outcomes and batch-level diagnostics.</returns>
+        </member>
+    </members>
+</doc>
