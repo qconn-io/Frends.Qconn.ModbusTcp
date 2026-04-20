@@ -9,70 +9,65 @@ using Xunit;
 
 namespace Frends.Qconn.ModbusTcp.Tests;
 
-/// <summary>Verifies the WriteGuard blocks writes when ModbusWritesAllowed=false before any socket is opened.</summary>
-[Collection("WriteGuard")]
-public class WriteGuardTests : IDisposable
+/// <summary>Verifies WriteGuard blocks writes when WriteOptions.AllowWrites is false, before any socket is opened.</summary>
+public class WriteGuardTests
 {
-    private readonly string? originalEnv;
-
-    public WriteGuardTests()
+    [Fact]
+    public void AllowWrites_True_Does_Not_Throw()
     {
-        originalEnv = Environment.GetEnvironmentVariable(WriteGuard.EnvVar);
-    }
-
-    public void Dispose()
-    {
-        Environment.SetEnvironmentVariable(WriteGuard.EnvVar, originalEnv);
+        WriteGuard.EnsureAllowed(allowWrites: true);
     }
 
     [Fact]
-    public void Unset_EnvVar_Allows_Writes()
+    public void AllowWrites_False_Throws_InvalidOperationException()
     {
-        Environment.SetEnvironmentVariable(WriteGuard.EnvVar, null);
-        WriteGuard.EnsureAllowed(); // should not throw
+        var ex = Assert.Throws<InvalidOperationException>(() => WriteGuard.EnsureAllowed(allowWrites: false));
+        Assert.Contains("AllowWrites = false", ex.Message);
+        Assert.Contains("#env.Modbus.AllowWrites", ex.Message);
     }
 
     [Fact]
-    public void True_EnvVar_Allows_Writes()
+    public void Default_WriteOptions_AllowWrites_Is_True()
     {
-        Environment.SetEnvironmentVariable(WriteGuard.EnvVar, "true");
-        WriteGuard.EnsureAllowed();
+        var options = new WriteOptions();
+        Assert.True(options.AllowWrites);
     }
 
     [Fact]
-    public void False_EnvVar_Throws_Before_Socket_Open()
+    public async Task WriteSingleCoil_Throws_When_AllowWrites_False_Without_Opening_Socket()
     {
-        Environment.SetEnvironmentVariable(WriteGuard.EnvVar, "false");
-        var ex = Assert.Throws<InvalidOperationException>(() => WriteGuard.EnsureAllowed());
-        Assert.Contains("Modbus writes are disabled", ex.Message);
-        Assert.Contains("ModbusWritesAllowed=false", ex.Message);
-    }
-
-    [Fact]
-    public async Task WriteSingleCoil_Throws_When_Disabled_Without_Opening_Socket()
-    {
-        Environment.SetEnvironmentVariable(WriteGuard.EnvVar, "false");
-
         var input = new WriteInput
         {
-            // deliberately use a non-routable host — if WriteGuard fails, the connect attempt would hang
+            // Non-routable port — if WriteGuard fails to block, the connect attempt would hang or fail differently
             Host = "127.0.0.1",
-            Port = 1, // a port guaranteed not to have a Modbus server
+            Port = 1,
             UnitId = 1,
             StartAddress = 0,
             Values = true,
         };
-        var options = new WriteOptions();
+        var options = new WriteOptions { AllowWrites = false };
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             WriteSingleCoil.WriteData(input, options, CancellationToken.None));
-        Assert.Contains("Modbus writes are disabled", ex.Message);
+        Assert.Contains("AllowWrites = false", ex.Message);
     }
 
     [Fact]
-    public void Numeric_One_Also_Allowed()
+    public async Task WriteSingleRegister_Throws_When_AllowWrites_False_Without_Opening_Socket()
     {
-        Environment.SetEnvironmentVariable(WriteGuard.EnvVar, "1");
-        WriteGuard.EnsureAllowed();
+        var input = new WriteInput
+        {
+            Host = "127.0.0.1",
+            Port = 1,
+            UnitId = 1,
+            StartAddress = 0,
+            ValueType = ModbusValueType.UInt16,
+            Values = (ushort)42,
+        };
+        var options = new WriteOptions { AllowWrites = false };
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            WriteSingleRegister.WriteData(input, options, CancellationToken.None));
+        Assert.Contains("AllowWrites = false", ex.Message);
     }
 }

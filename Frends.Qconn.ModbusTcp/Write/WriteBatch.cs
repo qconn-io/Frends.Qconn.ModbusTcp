@@ -23,7 +23,7 @@ public static class WriteBatch
         [PropertyTab] WriteOptions options,
         CancellationToken cancellationToken)
     {
-        WriteGuard.EnsureAllowed();
+        WriteGuard.EnsureAllowed(options.AllowWrites);
 
         var totalSw = Stopwatch.StartNew();
         var items = new Dictionary<string, WriteOutcome>();

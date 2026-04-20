@@ -25,7 +25,7 @@ internal static class WriteExecutor
         Func<IModbusMaster, Task> op,
         CancellationToken cancellationToken)
     {
-        WriteGuard.EnsureAllowed();
+        WriteGuard.EnsureAllowed(options is Write.Definitions.WriteOptions wo ? wo.AllowWrites : true);
 
         var totalSw = Stopwatch.StartNew();
 

@@ -12,11 +12,18 @@ Modbus TCP is a plaintext protocol with no built-in authentication. This package
 
 ## Controls in v2.0 Milestone 1
 
-### `ModbusWritesAllowed` Environment Variable (`WriteGuard`)
+### `WriteOptions.AllowWrites` — Write gate (`WriteGuard`)
 
-Every Write Task calls `WriteGuard.EnsureAllowed()` as its very first line, before any socket is opened. If `ModbusWritesAllowed` is set to `false` (or `0`), the Task throws `InvalidOperationException` with a deterministic message: *"Modbus writes are disabled for this Environment (ModbusWritesAllowed=false). Configure this Environment Variable to enable writes."* No TCP connection is attempted.
+Every Write Task checks `Options.AllowWrites` as its very first step, before any socket is opened. When `AllowWrites` is `false`, the Task throws `InvalidOperationException` with the message: *"Modbus writes are disabled (Options.AllowWrites = false)…"* No TCP connection is attempted.
 
-**Recommended Production configuration**: set `ModbusWritesAllowed=false` on every Environment that is not specifically authorized to write. Enable only on dedicated control-plane Environments with explicit change control around Agent configuration. An unset Environment Variable is interpreted as *allowed* for backward compatibility with v1; Production deployments should explicitly set the flag one way or the other.
+`AllowWrites` is a standard Frends task option. The recommended pattern for per-Environment control:
+
+1. In **Frends Management portal → Environments → [Environment] → Variables**, create a variable. Both Group Name and Variable Name are required fields. Example: Group `Modbus`, Variable `AllowWrites`, value `true` or `false`.
+2. In each Write Task's **Options tab**, set **Allow Writes** to `#env.Modbus.AllowWrites` (replacing `Modbus` with your chosen Group Name).
+
+The Frends runtime resolves `#env.Modbus.AllowWrites` to the Environment Variable value at execution time, so the same Process definition behaves differently on read-only vs. control-plane Environments without any code change.
+
+**Recommended Production configuration**: set `ModbusWritesAllowed=false` on every Environment that is not specifically authorized to write. Enable (`true`) only on dedicated control-plane Environments. The default when no value is provided in Options is `true`, preserving v1 backward compatibility; Production deployments should configure the variable explicitly.
 
 ### Write default behaviors
 
@@ -55,7 +62,7 @@ Agent-wide per-device pool with per-connection semaphore enforcing serial req/re
 - **Plaintext wire traffic** — Modbus TCP without TLS carries no confidentiality or integrity. Treat Modbus networks as physically isolated trust zones until TLS support ships.
 - **Per-connection serialization** — one in-flight request per pooled connection per device. Concurrent callers to the same device serialize behind the connection's semaphore. Raise `ModbusTcp.MaxConnectionsPerDevice` only if the target device accepts multiple simultaneous connections.
 - **Retry is off by default** for both reads and writes in this milestone. Opt in with `Options.Retry.MaxAttempts`.
-- **Audit `ValuesWritten` is not redacted.** If register values themselves are sensitive, configure `ModbusTcp.AuditSink=File` with a restricted-access path, or `Syslog` pointing at a dedicated SIEM.
+- **Audit `ValuesWritten` is not redacted.** If register values themselves are sensitive, set the Frends Environment Variable `ModbusTcp.AuditSink=File` with a restricted-access path, or `Syslog` pointing at a dedicated SIEM.
 
 ## Reporting security issues
 

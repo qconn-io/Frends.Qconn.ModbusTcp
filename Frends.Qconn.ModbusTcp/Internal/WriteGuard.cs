@@ -2,23 +2,19 @@ using System;
 
 namespace Frends.Qconn.ModbusTcp.Internal;
 
-/// <summary>Checks the Environment Variable ModbusWritesAllowed at the top of every Write Task.
-/// Throws InvalidOperationException (before any socket is opened) when writes are disabled.
-/// Default when the env var is unset is 'true' for v1 backward compatibility — Production Environments
-/// are strongly recommended to set this to 'false' and only enable in dedicated control-plane Environments.</summary>
+/// <summary>Checks Options.AllowWrites at the top of every Write Task before any socket is opened.
+/// AllowWrites is a Frends task parameter — set it to #env.GroupName.AllowWrites in the Process editor
+/// (e.g. #env.Modbus.AllowWrites) and configure the Frends Environment Variable per Environment to gate
+/// writes without changing Process logic.</summary>
 internal static class WriteGuard
 {
-    public const string EnvVar = "ModbusWritesAllowed";
-
-    public static void EnsureAllowed()
+    public static void EnsureAllowed(bool allowWrites)
     {
-        var raw = Environment.GetEnvironmentVariable(EnvVar);
-        if (string.IsNullOrWhiteSpace(raw)) return; // unset → allowed (backward compat)
-        if (bool.TryParse(raw, out var allowed) && allowed) return;
-        if (raw.Trim().Equals("1", StringComparison.Ordinal)) return;
-
-        throw new InvalidOperationException(
-            "Modbus writes are disabled for this Environment (ModbusWritesAllowed=false). " +
-            "Configure this Environment Variable to enable writes.");
+        if (!allowWrites)
+            throw new InvalidOperationException(
+                "Modbus writes are disabled (Options.AllowWrites = false). " +
+                "To enable: set Options.AllowWrites = true, or use a Frends Environment Variable — " +
+                "in the Frends Management portal add a variable (e.g. group Modbus, name AllowWrites, value true), " +
+                "then set Options.AllowWrites = #env.Modbus.AllowWrites in the Process editor.");
     }
 }

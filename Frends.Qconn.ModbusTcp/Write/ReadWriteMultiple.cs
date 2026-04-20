@@ -22,7 +22,7 @@ public static class ReadWriteMultiple
         [PropertyTab] WriteOptions options,
         CancellationToken cancellationToken)
     {
-        WriteGuard.EnsureAllowed();
+        WriteGuard.EnsureAllowed(options.AllowWrites);
 
         if (input.WriteRegisters is null || input.WriteRegisters.Length == 0)
             throw new ArgumentException("ReadWriteMultiple requires WriteRegisters to contain at least one value.", nameof(input));
