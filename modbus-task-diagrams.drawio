@@ -1,0 +1,325 @@
+<mxfile host="Claude">
+  <diagram id="d1" name="1 - Product Overview">
+    <mxGraphModel adaptiveColors="auto">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="p1_ttl" value="Frends.Qconn.ModbusTcp — Custom Task" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="800" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_sub" value="Read and write typed, scaled, endianness-corrected register values on Modbus TCP slave devices" style="text;html=1;fontSize=11;fontStyle=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="54" width="800" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_fp" value="&lt;b&gt;Frends Process&lt;/b&gt;&lt;br/&gt;(business logic &amp; orchestration)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="110" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_ct" value="&lt;b&gt;Frends.Qconn.ModbusTcp&lt;/b&gt;&lt;br/&gt;Custom Task v2.0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="315" y="100" width="210" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_dev" value="&lt;b&gt;Industrial Device&lt;/b&gt;&lt;br/&gt;Modbus TCP Slave&lt;br/&gt;(PLC / Meter / Sensor)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="610" y="110" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_e1" value="Tasks &amp; Results" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p1_fp" target="p1_ct" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_e2" value="Modbus TCP" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p1_ct" target="p1_dev" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_cap_hdr" value="v2.0 Feature Areas" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="212" width="200" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_c1" value="&lt;b&gt;Read (v1+)&lt;/b&gt;&#xa;FC01 / FC02 / FC03 / FC04&#xa;Coils + Registers&#xa;Decode · Scale · Offset" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="246" width="142" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_c2" value="&lt;b&gt;Write (v2 new)&lt;/b&gt;&#xa;FC05 / FC06 / FC15 / FC16 / FC23&#xa;Single · Multiple · Batch&#xa;WriteGuard protection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="218" y="246" width="142" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_c3" value="&lt;b&gt;Resilience (v2)&lt;/b&gt;&#xa;Connection Pool&#xa;Circuit Breaker&#xa;Retry + Backoff" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="376" y="246" width="142" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_c4" value="&lt;b&gt;Observability (v2)&lt;/b&gt;&#xa;Structured Audit Log&#xa;5 pluggable sinks&#xa;OpenTelemetry Meter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="534" y="246" width="142" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_c5" value="&lt;b&gt;Admin (v2)&lt;/b&gt;&#xa;PoolStatistics&#xa;CircuitState&#xa;ResetCircuit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="692" y="246" width="142" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_wg" value="&lt;b&gt;WriteGuard Safety:&lt;/b&gt; Set env var &lt;b&gt;ModbusWritesAllowed=false&lt;/b&gt; to block all Write Tasks before any TCP socket opens. Unset or true = allowed (default, for backward compat)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="356" width="380" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_v1" value="&lt;b&gt;Backward compatible:&lt;/b&gt; All v1 Read/ReadBatch public signatures, Options field order, and result shapes are frozen. Existing Frends Processes require zero changes to upgrade from v1." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="454" y="356" width="380" height="60" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="d2" name="2 - Execution Pipeline">
+    <mxGraphModel adaptiveColors="auto">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="p2_ttl" value="Request Execution Pipeline (Write operation shown; Read skips WriteGuard)" style="text;html=1;fontSize=16;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="860" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_a1" value="&lt;b&gt;Task Entry&lt;/b&gt;&#xa;WriteData() /&#xa;ReadData()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_a2" value="&lt;b&gt;WriteGuard&lt;/b&gt;&#xa;EnsureAllowed()&#xa;[Write only]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="220" y="90" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_a3" value="&lt;b&gt;BreakerRegistry&lt;/b&gt;&#xa;CanPass(key)&#xa;Closed / HalfOpen?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="400" y="90" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_a4" value="&lt;b&gt;RetryExecutor&lt;/b&gt;&#xa;MaxAttempts loop&#xa;exponential backoff" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="580" y="90" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_e1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p2_a1" target="p2_a2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_e2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p2_a2" target="p2_a3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_e3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p2_a3" target="p2_a4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_err_guard" value="InvalidOperationException&#xa;(no socket opened)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="220" y="200" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_err_breaker" value="ErrorCategory.CircuitOpen&#xa;(returned in &lt; 1 ms)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="400" y="200" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_e_guard_err" value="blocked" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="p2_a2" target="p2_err_guard" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_e_breaker_err" value="Open" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="p2_a3" target="p2_err_breaker" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_retry_bg" value="Retry Loop (per MaxAttempts)" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#aaaaaa;verticalAlign=top;fontSize=10;align=left;" vertex="1" parent="1">
+          <mxGeometry x="20" y="290" width="580" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_b1" value="&lt;b&gt;ConnectionPool&lt;/b&gt;&#xa;AcquireAsync(key)&#xa;per-device TCP reuse" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="305" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_b2" value="&lt;b&gt;Execute Modbus&lt;/b&gt;&#xa;IModbusMaster&#xa;FC01-FC23 via NModbus" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="220" y="305" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_b3" value="&lt;b&gt;ModbusLease.Dispose&lt;/b&gt;&#xa;success: Release&#xa;error: Poison + Remove" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="400" y="305" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_b4" value="&lt;b&gt;AuditRouter.Emit&lt;/b&gt;&#xa;ModbusAuditEvent&#xa;one event per operation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="580" y="305" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_b5" value="&lt;b&gt;Return Result&lt;/b&gt;&#xa;Success / Error&#xa;+ Diagnostics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="760" y="305" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_e_wrap" value="per attempt" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p2_a4" target="p2_b1" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_e4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p2_b1" target="p2_b2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_e5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p2_b2" target="p2_b3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_e6" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p2_b3" target="p2_b4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_e7" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p2_b4" target="p2_b5" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_note" value="&lt;b&gt;Breaker feedback:&lt;/b&gt; ModbusLease.Dispose calls BreakerRegistry.RecordSuccess() or RecordFailure(). Modbus exception codes 1/2/3 (client bugs) never count as failures. Codes 4/5/6/10/11 count." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="410" width="870" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_telemetry" value="&lt;b&gt;Telemetry (throughout):&lt;/b&gt; Meter counters modbus.operations, modbus.errors, modbus.retry.count, modbus.backpressure.rejected incremented at each step. ActivitySource span wraps the full operation." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="460" width="870" height="40" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="d3" name="3 - Circuit Breaker">
+    <mxGraphModel adaptiveColors="auto">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="p3_ttl" value="Circuit Breaker State Machine" style="text;html=1;fontSize=18;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="760" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_sub" value="One breaker per ConnectionKey (Host + Port + UnitId). Default: FailureThreshold=5, OpenDurationMs=30000, SuccessThresholdToClose=1." style="text;html=1;fontSize=11;fontStyle=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="50" width="760" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_closed" value="&lt;b&gt;CLOSED&lt;/b&gt;&#xa;Normal operation&#xa;Requests pass through" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="80" y="180" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_open" value="&lt;b&gt;OPEN&lt;/b&gt;&#xa;All requests short-circuit&#xa;Returns CircuitOpen error instantly" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="540" y="180" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_half" value="&lt;b&gt;HALF-OPEN&lt;/b&gt;&#xa;One probe request allowed&#xa;Tests device recovery" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="310" y="400" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_t1" value="&gt;= FailureThreshold consecutive&#xa;device failures (codes 4/5/6/10/11)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b85450;fontColor=#b85450;fontSize=10;" edge="1" source="p3_closed" target="p3_open" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_t2" value="OpenDurationMs elapsed&#xa;(default 30 s)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d6b656;fontColor=#8a5a00;fontSize=10;" edge="1" source="p3_open" target="p3_half" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_t3" value="Probe success&#xa;(SuccessThresholdToClose met)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#82b366;fontColor=#2a6b2a;fontSize=10;" edge="1" source="p3_half" target="p3_closed" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_t4" value="Probe failure" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b85450;fontColor=#b85450;fontSize=10;" edge="1" source="p3_half" target="p3_open" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_n1" value="&lt;b&gt;Counts as failure:&lt;/b&gt; Modbus device codes 4 (SlaveDeviceFailure), 5 (Acknowledge), 6 (SlaveDeviceBusy), 10 (GatewayPathUnavailable), 11 (GatewayTargetDeviceFailed). Also: Timeout, ConnectionRefused, SocketError." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="540" width="320" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_n2" value="&lt;b&gt;Does NOT count:&lt;/b&gt; Modbus client-bug codes 1 (IllegalFunction), 2 (IllegalDataAddress), 3 (IllegalDataValue). These indicate a logic error in the Task configuration, not a device failure." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="440" y="540" width="320" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_n3" value="Set &lt;b&gt;Options.CircuitBreaker.Enabled=false&lt;/b&gt; to disable the breaker for a specific Task call. Set &lt;b&gt;Admin.ResetCircuit&lt;/b&gt; to manually reset from OPEN to CLOSED (audit-logged)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="630" width="680" height="40" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="d4" name="4 - Connection Pool">
+    <mxGraphModel adaptiveColors="auto">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="p4_ttl" value="Connection Pool — AcquireAsync Lifecycle" style="text;html=1;fontSize=18;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="760" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_sub" value="Agent-wide pool keyed by (Host, Port, UnitId, TransportMode). Default: MaxConnectionsPerDevice=1, IdleTimeoutMs=60000, AcquireTimeoutMs=5000." style="text;html=1;fontSize=11;fontStyle=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="50" width="760" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_entry" value="&lt;b&gt;AcquireAsync(key, options, ct)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="260" y="90" width="270" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_d1" value="&lt;b&gt;TryGetValue(key)?&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="270" y="180" width="250" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_e_entry_d1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p4_entry" target="p4_d1" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_miss_connect" value="&lt;b&gt;ModbusConnection.ConnectAsync&lt;/b&gt;&#xa;new TcpClient + IModbusMaster&#xa;(ConnectTimeoutMs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="320" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_miss_add" value="&lt;b&gt;new PooledConnection&lt;/b&gt;&#xa;ConcurrentDictionary.TryAdd&#xa;SemaphoreSlim(1,1) attached" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="440" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_e_d1_miss" value="Miss" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p4_d1" target="p4_miss_connect" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_e_miss1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p4_miss_connect" target="p4_miss_add" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_sema" value="&lt;b&gt;SemaphoreSlim.WaitAsync&lt;/b&gt;&#xa;(AcquireTimeoutMs)&#xa;serialises req/resp per connection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="560" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_e_d1_hit" value="Hit" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p4_d1" target="p4_sema" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_e_miss_sema" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p4_miss_add" target="p4_sema" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_bp" value="&lt;b&gt;ErrorCategory.Backpressure&lt;/b&gt;&#xa;AcquireTimeoutMs exceeded&#xa;(no socket attempt)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="560" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_e_sema_bp" value="Timeout" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b85450;fontColor=#b85450;" edge="1" source="p4_sema" target="p4_bp" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_lease" value="&lt;b&gt;ModbusLease issued&lt;/b&gt;&#xa;IModbusMaster exposed&#xa;CancellationToken registered" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="680" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_e_sema_lease" value="OK" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p4_sema" target="p4_lease" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_op" value="[caller executes Modbus operation]" style="text;html=1;fontSize=11;fontStyle=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="240" y="768" width="300" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_d2" value="&lt;b&gt;DisposeAsync:&#xa;Poison=true?&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="800" width="220" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_e_lease_d2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p4_lease" target="p4_d2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_release" value="&lt;b&gt;Release semaphore&lt;/b&gt;&#xa;Connection reused by&#xa;next caller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="940" width="180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_poison" value="&lt;b&gt;Remove from pool&lt;/b&gt;&#xa;TcpClient.Dispose()&#xa;socket closed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="520" y="940" width="180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_e_d2_rel" value="No (success)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#82b366;fontColor=#2a6b2a;" edge="1" source="p4_d2" target="p4_release" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_e_d2_poi" value="Yes (socket error / cancel)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b85450;fontColor=#b85450;" edge="1" source="p4_d2" target="p4_poison" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4_evict" value="&lt;b&gt;Background Eviction Timer (30 s interval)&lt;/b&gt;&#xa;Removes connections idle &gt; IdleTimeoutMs (default 60 s).&#xa;Hooks: AppDomain.ProcessExit + AssemblyLoadContext.Unloading." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1040" width="700" height="50" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="d5" name="5 - Audit Routing">
+    <mxGraphModel adaptiveColors="auto">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="p5_ttl" value="Audit Logging — AuditRouter Sink Selection" style="text;html=1;fontSize=18;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="980" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_sub" value="Every Read, Write, and Admin operation emits exactly one ModbusAuditEvent. Sink is selected once at startup from the ModbusTcp.AuditSink environment variable." style="text;html=1;fontSize=11;fontStyle=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="50" width="980" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_env" value="&lt;b&gt;Env var: ModbusTcp.AuditSink&lt;/b&gt;&#xa;Values: FrendsLog | File | Syslog | OpenTelemetry | None&#xa;Default: FrendsLog" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="340" y="90" width="280" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_router" value="&lt;b&gt;AuditRouter&lt;/b&gt;&#xa;Lazy&lt;IAuditSink&gt;&#xa;IAuditSink.Emit(event)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="380" y="210" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_e_env" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p5_env" target="p5_router" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_s1" value="&lt;b&gt;FrendsLog&lt;/b&gt; (default)&#xa;Trace-level log entry&#xa;JSON to Process Instance log&#xa;Visible in Frends Ops UI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="360" width="160" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_s2" value="&lt;b&gt;File&lt;/b&gt;&#xa;JSON-lines format&#xa;Daily-rotated log file&#xa;Use for restricted access" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="230" y="360" width="160" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_s3" value="&lt;b&gt;Syslog&lt;/b&gt;&#xa;RFC 5424 UDP&#xa;Forward to SIEM&#xa;Centralised audit trail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="420" y="360" width="160" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_s4" value="&lt;b&gt;OpenTelemetry&lt;/b&gt;&#xa;ActivitySource tags&#xa;Integrates with OTEL SDK&#xa;Distributed tracing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="610" y="360" width="160" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_s5" value="&lt;b&gt;None&lt;/b&gt;&#xa;NoopAuditSink&#xa;Discards all events&#xa;Use only in dev/test" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="360" width="160" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_e1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p5_router" target="p5_s1" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_e2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p5_router" target="p5_s2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_e3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p5_router" target="p5_s3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_e4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p5_router" target="p5_s4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_e5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="p5_router" target="p5_s5" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_fields" value="&lt;b&gt;ModbusAuditEvent fields:&lt;/b&gt; Operation · Host · Port · UnitId · FunctionCode · StartAddress · Count · Success · ErrorCategory · ModbusExceptionCode · AttemptCount · TotalTimeMs · ValuesWritten (writes only) · AgentName · EnvironmentName · TimestampUtc" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="490" width="920" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5_warn" value="&lt;b&gt;Security note:&lt;/b&gt; Audit events are never redacted by Agent-level DoNotLog flags. ValuesWritten carries the full register payload — if register values are sensitive, use File (restricted path) or Syslog pointing at a dedicated SIEM." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="548" width="920" height="40" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

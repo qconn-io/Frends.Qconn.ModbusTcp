@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using Frends.Qconn.ModbusTcp.Common.Definitions;
+
 namespace Frends.Qconn.ModbusTcp.Read.Definitions;
 
 /// <summary>Timing and connection metrics for the read operation. Always populated, including on failure.</summary>
@@ -29,6 +33,29 @@ public class Diagnostics
 
     /// <summary>Number of registers requested on the wire. For multi-word types, this is greater than NumberOfValues.</summary>
     public ushort WireRegisterCount { get; }
+
+    // ----------------------- v2 additions (init-only; visible but invisible to v1 constructor callers) -----------------------
+
+    /// <summary>Per-attempt timing/error history (populated when Options.Retry.MaxAttempts > 1). Null otherwise.</summary>
+    public IReadOnlyList<AttemptRecord>? AttemptHistory { get; init; }
+
+    /// <summary>TLS protocol version negotiated, e.g. "Tls13". Null for plaintext connections and in this milestone.</summary>
+    public string? TlsProtocol { get; init; }
+
+    /// <summary>TLS cipher suite negotiated. Null for plaintext connections and in this milestone.</summary>
+    public string? TlsCipherSuite { get; init; }
+
+    /// <summary>SHA-256 thumbprint of the server certificate. Null for plaintext connections and in this milestone.</summary>
+    public string? ServerCertificateThumbprint { get; init; }
+
+    /// <summary>Subject distinguished name of the server certificate. Null for plaintext connections and in this milestone.</summary>
+    public string? ServerCertificateSubject { get; init; }
+
+    /// <summary>Server certificate expiry (NotAfter). Null for plaintext connections and in this milestone.</summary>
+    public DateTimeOffset? ServerCertificateExpiresUtc { get; init; }
+
+    /// <summary>Modbus RBAC role extracted from the client certificate X.509v3 extension, if present. Null otherwise.</summary>
+    public string? ModbusRole { get; init; }
 
     /// <summary>Initializes a new Diagnostics instance.</summary>
     public Diagnostics(

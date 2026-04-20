@@ -2,7 +2,7 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <LangVersion>latest</LangVersion>
-        <Version>1.0.0</Version>
+        <Version>2.0.2</Version>
         <PackageId>Frends.Qconn.ModbusTcp</PackageId>
         <AssemblyName>Frends.Qconn.ModbusTcp</AssemblyName>
         <RootNamespace>Frends.Qconn.ModbusTcp</RootNamespace>
@@ -13,7 +13,7 @@
         <PackageTags>Frends Modbus TCP</PackageTags>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <Description>Read values from Modbus TCP slave devices</Description>
+        <Description>Read and write values on Modbus TCP slave devices. v2 adds writes, connection pooling, circuit breaker, retry, audit logging, and OpenTelemetry primitives.</Description>
         <PackageProjectUrl>https://frends.com/</PackageProjectUrl>
         <RepositoryUrl>https://github.com/FrendsPlatform/Frends.Qconn.ModbusTcp</RepositoryUrl>
         <Nullable>enable</Nullable>

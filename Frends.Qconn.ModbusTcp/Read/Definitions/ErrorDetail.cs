@@ -29,6 +29,27 @@ public enum ErrorCategory
 
     /// <summary>Unexpected error not covered by other categories.</summary>
     Unexpected,
+
+    // ----------------------- v2 additions (append-only; existing order above is v1-frozen) -----------------------
+
+    /// <summary>Circuit breaker is Open for this device. The request was short-circuited without opening a socket.
+    /// Transient — the breaker transitions to HalfOpen after Options.CircuitBreaker.OpenDurationMs.</summary>
+    CircuitOpen,
+
+    /// <summary>Connection pool queue slot unavailable within Options.Pool.AcquireTimeoutMs. Transient.</summary>
+    Backpressure,
+
+    /// <summary>Generic TCP socket-level failure (read/write) that didn't map to a more specific category.</summary>
+    SocketError,
+
+    /// <summary>Modbus gateway-level timeout or failure (exception codes 10, 11). Transient.</summary>
+    GatewayTimeout,
+
+    /// <summary>Slave signalled busy (Modbus exception code 6). Transient — retry after backoff.</summary>
+    SlaveBusy,
+
+    /// <summary>TLS handshake or certificate-validation failure. Reserved for the TLS milestone.</summary>
+    TlsError,
 }
 
 /// <summary>Structured error information returned when Success is false.</summary>

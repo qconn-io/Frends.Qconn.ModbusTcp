@@ -1,10 +1,25 @@
-﻿[
+[
   {
     "Task": "Frends.Qconn.ModbusTcp.Read",
     "Migrations": [
       {
         "Version": "1.0.0",
         "Description": "",
+        "Migration": []
+      },
+      {
+        "Version": "2.0.0",
+        "Description": "Adds Options.TransportMode, Options.DeviceProfile, Options.Pool, Options.Retry, Options.CircuitBreaker. No v1 field removed or reordered. Defaults preserve v1 behavior (TransportMode=TcpNative, Retry.MaxAttempts=1, CircuitBreaker.Enabled=true with a 5-failure threshold that a healthy device will never trip).",
+        "Migration": []
+      }
+    ]
+  },
+  {
+    "Task": "Frends.Qconn.ModbusTcp.ReadBatch",
+    "Migrations": [
+      {
+        "Version": "2.0.0",
+        "Description": "Uses the shared Read Options type. New v2 options (Pool/Retry/CircuitBreaker/TransportMode/DeviceProfile) apply at the batch level.",
         "Migration": []
       }
     ]

@@ -1,6 +1,6 @@
 # Frends.Qconn.ModbusTcp
 
-Read typed, scaled, endianness-corrected values from Modbus TCP slave devices.
+Read and write typed, scaled, endianness-corrected values on Modbus TCP slave devices. v2 adds writes, a transparent connection pool, circuit breaker, retry, structured audit logging, and OpenTelemetry primitives.
 
 [![build](https://github.com/FrendsPlatform/Frends.Qconn.ModbusTcp/actions/workflows/Read_test_on_main.yml/badge.svg)](https://github.com/FrendsPlatform/Frends.Qconn.ModbusTcp/actions/workflows/Read_test_on_main.yml)
 ![Coverage](https://app-github-custom-badges.azurewebsites.net/Badge?key=FrendsPlatform/Frends.Qconn.ModbusTcp/Frends.Qconn.ModbusTcp|main)
@@ -8,8 +8,25 @@ Read typed, scaled, endianness-corrected values from Modbus TCP slave devices.
 
 ## Tasks
 
+Reads (v1):
 - [Read.ReadData](#readreaddata) — single block read
 - [ReadBatch.ReadBatchData](#readbatchreadbatchdata) — multiple blocks over one connection
+
+Writes (v2):
+- `Write.WriteSingleCoil.WriteData` — FC05
+- `Write.WriteSingleRegister.WriteData` — FC06
+- `Write.WriteMultiple.WriteData` — FC15 (coils) / FC16 (registers)
+- `Write.ReadWriteMultiple.ReadWriteData` — FC23
+- `Write.WriteBatch.WriteBatchData` — multiple writes over one connection
+
+Admin (v2):
+- `Admin.PoolStatistics.GetStatistics` — pool snapshot for Ops dashboards
+- `Admin.CircuitState.GetState` — breaker snapshot per device
+- `Admin.ResetCircuit.ResetState` — manual breaker reset (audit-logged)
+
+v2 also adds five new fields to the existing `Options` type: `TransportMode`, `DeviceProfile`, `Pool`, `Retry`, `CircuitBreaker`. Positions 1–7 of `Options` (the v1 fields) are frozen. Defaults preserve v1 behavior.
+
+See [CHANGELOG.md](./CHANGELOG.md) for the full v2 change list and [SECURITY.md](./SECURITY.md) for the Write threat model and TLS deployment guidance.
 
 ---
 

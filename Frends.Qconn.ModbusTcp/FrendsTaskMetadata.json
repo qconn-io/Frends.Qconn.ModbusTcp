@@ -5,6 +5,30 @@
     },
     {
       "TaskMethod": "Frends.Qconn.ModbusTcp.ReadBatch.ReadBatch.ReadBatchData"
+    },
+    {
+      "TaskMethod": "Frends.Qconn.ModbusTcp.Write.WriteSingleCoil.WriteData"
+    },
+    {
+      "TaskMethod": "Frends.Qconn.ModbusTcp.Write.WriteSingleRegister.WriteData"
+    },
+    {
+      "TaskMethod": "Frends.Qconn.ModbusTcp.Write.WriteMultiple.WriteData"
+    },
+    {
+      "TaskMethod": "Frends.Qconn.ModbusTcp.Write.ReadWriteMultiple.ReadWriteData"
+    },
+    {
+      "TaskMethod": "Frends.Qconn.ModbusTcp.Write.WriteBatch.WriteBatchData"
+    },
+    {
+      "TaskMethod": "Frends.Qconn.ModbusTcp.Admin.PoolStatistics.GetStatistics"
+    },
+    {
+      "TaskMethod": "Frends.Qconn.ModbusTcp.Admin.CircuitState.GetState"
+    },
+    {
+      "TaskMethod": "Frends.Qconn.ModbusTcp.Admin.ResetCircuit.ResetState"
     }
   ]
 }

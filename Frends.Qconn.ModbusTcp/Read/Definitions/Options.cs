@@ -50,4 +50,29 @@ public class Options
     /// <example>false</example>
     [DefaultValue(false)]
     public bool ThrowOnFailure { get; set; } = false;
+
+    // ----------------------- v2 additions (appended; fields 1–7 above are v1-frozen) -----------------------
+
+    /// <summary>Modbus framing over TCP. Default TcpNative. RtuOverTcp is reserved for a later milestone
+    /// and currently throws NotSupportedException at connect time.</summary>
+    /// <example>TcpNative</example>
+    [DefaultValue(TransportMode.TcpNative)]
+    public TransportMode TransportMode { get; set; } = TransportMode.TcpNative;
+
+    /// <summary>Optional device-profile identifier. When set, defaults from the named profile pre-fill any Options
+    /// and Input fields the caller has left at their default value. Reserved for a later milestone — ignored today.</summary>
+    /// <example>null</example>
+    [DefaultValue(null)]
+    public string? DeviceProfile { get; set; } = null;
+
+    /// <summary>Connection-pool settings. Defaults reuse sockets transparently.</summary>
+    public PoolOptions Pool { get; set; } = new PoolOptions();
+
+    /// <summary>Retry settings. Default MaxAttempts = 1 preserves v1 single-shot behavior;
+    /// set MaxAttempts &gt; 1 to enable retry of transient failures.</summary>
+    public RetryOptions Retry { get; set; } = new RetryOptions();
+
+    /// <summary>Circuit-breaker settings. Default Enabled = true with a 5-failure threshold
+    /// and 30-second Open duration.</summary>
+    public CircuitBreakerOptions CircuitBreaker { get; set; } = new CircuitBreakerOptions();
 }
