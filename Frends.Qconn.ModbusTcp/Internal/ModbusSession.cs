@@ -10,6 +10,6 @@ namespace Frends.Qconn.ModbusTcp.Internal;
 internal static class ModbusSession
 {
     public static Task<ModbusLease> AcquireAsync(
-        ConnectionKey key, Options options, CancellationToken cancellationToken)
+        ConnectionKey key, IModbusOptions options, CancellationToken cancellationToken)
         => ConnectionPool.AcquireAsync(key, options, cancellationToken);
 }

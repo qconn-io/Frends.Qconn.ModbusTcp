@@ -99,15 +99,14 @@ public class WriteRoundTripTests
     public async Task UInt16_Single_Register_RoundTrip()
     {
         using var slave = new InProcessSlave();
-        var input = new WriteInput
+        var input = new WriteSingleRegisterInput
         {
             Host = "127.0.0.1",
             Port = slave.Port,
             UnitId = 1,
-            DataType = ModbusDataType.HoldingRegisters,
             StartAddress = 0,
             ValueType = ModbusValueType.UInt16,
-            Values = (ushort)42000,
+            Value = (ushort)42000,
         };
         await WriteSingleRegister.WriteData(input, new WriteOptions(), CancellationToken.None);
 
@@ -130,13 +129,13 @@ public class WriteRoundTripTests
     public async Task Coil_Write_Read_Boolean()
     {
         using var slave = new InProcessSlave();
-        await WriteSingleCoil.WriteData(new WriteInput
+        await WriteSingleCoil.WriteData(new WriteSingleCoilInput
         {
             Host = "127.0.0.1",
             Port = slave.Port,
             UnitId = 1,
             StartAddress = 5,
-            Values = true,
+            Value = true,
         }, new WriteOptions(), CancellationToken.None);
 
         var readResult = await ReadTask.ReadData(new Input

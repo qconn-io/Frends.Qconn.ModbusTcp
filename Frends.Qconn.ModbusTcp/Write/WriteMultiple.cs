@@ -44,7 +44,9 @@ public static class WriteMultiple
         var bools = ModbusEncoder.EncodeBools(input.Values!);
         ushort wireCount = (ushort)bools.Length;
 
-        return WriteExecutor.ExecuteAsync(input, options,
+        return WriteExecutor.ExecuteAsync(
+            host: input.Host, port: input.Port, unitId: input.UnitId,
+            options: options,
             operationName: "WriteMultipleCoils",
             functionCode: 15,
             wireAddr: wireAddr,
@@ -73,7 +75,9 @@ public static class WriteMultiple
             throw new ArgumentException(
                 $"WriteMultipleRegisters maximum is 123 registers per the Modbus spec; got {wireCount}.", nameof(input));
 
-        return WriteExecutor.ExecuteAsync(input, options,
+        return WriteExecutor.ExecuteAsync(
+            host: input.Host, port: input.Port, unitId: input.UnitId,
+            options: options,
             operationName: "WriteMultipleRegisters",
             functionCode: 16,
             wireAddr: wireAddr,

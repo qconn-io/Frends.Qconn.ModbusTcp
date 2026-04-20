@@ -36,14 +36,14 @@ public class WriteGuardTests
     [Fact]
     public async Task WriteSingleCoil_Throws_When_AllowWrites_False_Without_Opening_Socket()
     {
-        var input = new WriteInput
+        var input = new WriteSingleCoilInput
         {
             // Non-routable port — if WriteGuard fails to block, the connect attempt would hang or fail differently
             Host = "127.0.0.1",
             Port = 1,
             UnitId = 1,
             StartAddress = 0,
-            Values = true,
+            Value = true,
         };
         var options = new WriteOptions { AllowWrites = false };
 
@@ -55,14 +55,14 @@ public class WriteGuardTests
     [Fact]
     public async Task WriteSingleRegister_Throws_When_AllowWrites_False_Without_Opening_Socket()
     {
-        var input = new WriteInput
+        var input = new WriteSingleRegisterInput
         {
             Host = "127.0.0.1",
             Port = 1,
             UnitId = 1,
             StartAddress = 0,
             ValueType = ModbusValueType.UInt16,
-            Values = (ushort)42,
+            Value = (ushort)42,
         };
         var options = new WriteOptions { AllowWrites = false };
 

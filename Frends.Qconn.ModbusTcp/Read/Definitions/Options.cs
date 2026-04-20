@@ -1,10 +1,11 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Frends.Qconn.ModbusTcp.Internal;
 
 namespace Frends.Qconn.ModbusTcp.Read.Definitions;
 
 /// <summary>Behavioral options for the Modbus TCP read operation.</summary>
-public class Options
+public class Options : IModbusOptions
 {
     /// <summary>Byte and word order for multi-register values (Int32, UInt32, Float32, Float64).
     /// Ignored for Raw, Int16, UInt16, AsciiString, and coil reads.

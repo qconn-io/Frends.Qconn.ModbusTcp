@@ -37,7 +37,7 @@ internal static class ConnectionPool
     /// <summary>Acquires a lease to a Modbus master. If <c>UseConnectionPool</c> is false, a fresh ephemeral
     /// connection is created and disposed on lease release. Otherwise, the pool is consulted.</summary>
     public static async Task<ModbusLease> AcquireAsync(
-        ConnectionKey key, Options options, CancellationToken cancellationToken)
+        ConnectionKey key, IModbusOptions options, CancellationToken cancellationToken)
     {
         if (key.TransportMode == TransportMode.RtuOverTcp)
             throw new NotSupportedException("TransportMode.RtuOverTcp is reserved for a later milestone and not wired in v2.0.");
@@ -111,7 +111,7 @@ internal static class ConnectionPool
     }
 
     private static async Task<ModbusLease> AcquireEphemeralAsync(
-        ConnectionKey key, Options options, CancellationToken cancellationToken)
+        ConnectionKey key, IModbusOptions options, CancellationToken cancellationToken)
     {
         var (tcp, connectMs) = await ModbusConnection
             .ConnectAsync(key.Host, key.Port, options.ConnectTimeoutMs, cancellationToken)
