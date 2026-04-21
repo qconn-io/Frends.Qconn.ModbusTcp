@@ -2,7 +2,7 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <LangVersion>latest</LangVersion>
-        <Version>2.0.6</Version>
+        <Version>2.0.7</Version>
         <PackageId>Frends.Qconn.ModbusTcp</PackageId>
         <AssemblyName>Frends.Qconn.ModbusTcp</AssemblyName>
         <RootNamespace>Frends.Qconn.ModbusTcp</RootNamespace>

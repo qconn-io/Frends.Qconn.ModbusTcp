@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using Frends.Qconn.ModbusTcp.Read.Definitions;
 
 namespace Frends.Qconn.ModbusTcp.Write.Definitions;
@@ -31,7 +32,8 @@ public class WriteBatchItem
     public double Scale { get; set; } = 1.0;
 
     /// <summary>Offset (see Scale).</summary>
-    [DefaultValue(0.0)]
+    [DefaultValue("0")]
+    [DisplayFormat(DataFormatString = "Expression")]
     public double Offset { get; set; } = 0.0;
 
     /// <summary>Values to write.</summary>

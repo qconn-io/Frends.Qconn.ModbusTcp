@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.7] - 2026-04-21
+
+### Fixed
+
+- **Frends UI**: `Offset` field blank on process open and save-validation error in all tasks that expose it (`Read.ReadData`, `ReadBatch.ReadBatchData`, `Write.WriteBatch`, and all write tasks via `WriteOptions`). Root cause: `[DefaultValue(0.0)]` produces a JavaScript-falsy value so the Frends UI never pre-populated the field. Fixed by switching to `[DefaultValue("0")]` + `[DisplayFormat(DataFormatString = "Expression")]`, which stores the default as a non-empty string expression. Added missing `System.ComponentModel.DataAnnotations` using to `WriteBatchItem.cs`.
+
 ## [2.0.6] - 2026-04-21
 
 ### Fixed

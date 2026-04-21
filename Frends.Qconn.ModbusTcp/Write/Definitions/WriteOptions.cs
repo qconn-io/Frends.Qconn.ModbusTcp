@@ -26,8 +26,9 @@ public class WriteOptions : IModbusOptions
     [DefaultValue(1.0)]
     public double Scale { get; set; } = 1.0;
 
-    /// <summary>Offset applied before scale inversion: wire_value = (value - Offset) / Scale. Default 0.0.</summary>
-    [DefaultValue(0.0)]
+    /// <summary>Offset applied before scale inversion: wire_value = (value - Offset) / Scale. Default 0.</summary>
+    [DefaultValue("0")]
+    [DisplayFormat(DataFormatString = "Expression")]
     public double Offset { get; set; } = 0.0;
 
     /// <summary>TCP socket connect timeout in milliseconds.</summary>

@@ -31,8 +31,9 @@ public class Options : IModbusOptions
     public double Scale { get; set; } = 1.0;
 
     /// <summary>Offset added after Scale: output = (raw * Scale) + Offset. See Scale.</summary>
-    /// <example>0.0</example>
-    [DefaultValue(0.0)]
+    /// <example>0</example>
+    [DefaultValue("0")]
+    [DisplayFormat(DataFormatString = "Expression")]
     public double Offset { get; set; } = 0.0;
 
     /// <summary>TCP socket connect timeout in milliseconds.</summary>

@@ -39,7 +39,8 @@ public class BatchReadItem
     public double Scale { get; set; } = 1.0;
 
     /// <summary>Offset for this item: output = (raw * Scale) + Offset.</summary>
-    /// <example>0.0</example>
-    [DefaultValue(0.0)]
+    /// <example>0</example>
+    [DefaultValue("0")]
+    [DisplayFormat(DataFormatString = "Expression")]
     public double Offset { get; set; } = 0.0;
 }
