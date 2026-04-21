@@ -3,7 +3,7 @@
 Read and write typed, scaled, endianness-corrected values on Modbus TCP slave devices.
 
 [![build](https://github.com/qconn-io/Frends.Qconn.ModbusTcp/actions/workflows/Read_test_on_main.yml/badge.svg)](https://github.com/qconn-io/Frends.Qconn.ModbusTcp/actions/workflows/Read_test_on_main.yml)
-![Coverage](https://app-github-custom-badges.azurewebsites.net/Badge?key=qconn-io/Frends.Qconn.ModbusTcp/Frends.Qconn.ModbusTcp|main)
+![Coverage](https://app-github-custom-badges.azurewebsites.net/Badge?key=qconn-io/Frends.Qconn.ModbusTcp|main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 ---
