@@ -60,9 +60,9 @@ public class DecoderTests
     // LittleEndianWordSwap = {0x2000, 0x47F1}  (CDAB: C=0x20,D=0x00,A=0x47,B=0xF1)
 
     [Theory]
-    [InlineData(ByteOrder.BigEndian,            0x47F1, 0x2000)]
-    [InlineData(ByteOrder.LittleEndian,         0x0020, 0xF147)]
-    [InlineData(ByteOrder.BigEndianByteSwap,    0xF147, 0x0020)]
+    [InlineData(ByteOrder.BigEndian, 0x47F1, 0x2000)]
+    [InlineData(ByteOrder.LittleEndian, 0x0020, 0xF147)]
+    [InlineData(ByteOrder.BigEndianByteSwap, 0xF147, 0x0020)]
     [InlineData(ByteOrder.LittleEndianWordSwap, 0x2000, 0x47F1)]
     public void Float32_AllByteOrders_Decode_To_123456(ByteOrder order, ushort r0, ushort r1)
     {
@@ -196,14 +196,14 @@ public class DecoderTests
     // ─── Register count computation ───────────────────────────────────────────
 
     [Theory]
-    [InlineData(ModbusValueType.Raw,        5, 5)]
-    [InlineData(ModbusValueType.Int16,      5, 5)]
-    [InlineData(ModbusValueType.UInt16,     5, 5)]
-    [InlineData(ModbusValueType.Int32,      5, 10)]
-    [InlineData(ModbusValueType.UInt32,     5, 10)]
-    [InlineData(ModbusValueType.Float32,    5, 10)]
-    [InlineData(ModbusValueType.Float64,    5, 20)]
-    [InlineData(ModbusValueType.AsciiString,5, 5)]
+    [InlineData(ModbusValueType.Raw, 5, 5)]
+    [InlineData(ModbusValueType.Int16, 5, 5)]
+    [InlineData(ModbusValueType.UInt16, 5, 5)]
+    [InlineData(ModbusValueType.Int32, 5, 10)]
+    [InlineData(ModbusValueType.UInt32, 5, 10)]
+    [InlineData(ModbusValueType.Float32, 5, 10)]
+    [InlineData(ModbusValueType.Float64, 5, 20)]
+    [InlineData(ModbusValueType.AsciiString, 5, 5)]
     public void ComputeRegisterCount_Returns_Correct_Count(ModbusValueType vt, ushort n, ushort expected)
     {
         Assert.Equal(expected, ModbusDecoder.ComputeRegisterCount(vt, n));

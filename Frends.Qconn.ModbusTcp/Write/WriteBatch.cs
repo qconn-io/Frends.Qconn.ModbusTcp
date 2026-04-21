@@ -148,7 +148,8 @@ public static class WriteBatch
                                 item.Values as string ?? throw new ArgumentException($"Item '{item.Name}': AsciiString requires string Values."),
                                 item.NumberOfValues);
                         else
-                            regs = ModbusEncoder.Encode(item.Values ?? throw new ArgumentException($"Item '{item.Name}': Values is null."),
+                            regs = ModbusEncoder.Encode(
+                                item.Values ?? throw new ArgumentException($"Item '{item.Name}': Values is null."),
                                 item.ValueType, options.ByteOrder, item.Scale, item.Offset);
                         await lease.Master.WriteMultipleRegistersAsync(input.UnitId, wireAddr, regs).ConfigureAwait(false);
                         items[item.Name] = new WriteOutcome((ushort)regs.Length);
@@ -168,7 +169,8 @@ public static class WriteBatch
                 {
                     if (CircuitBreaker.CountsAsFailure(ErrorCategory.ModbusException, ex.SlaveExceptionCode))
                         breaker.RecordFailure(BreakerRegistry.Clock);
-                    items[item.Name] = new WriteOutcome(new ErrorDetail(ErrorCategory.ModbusException,
+                    items[item.Name] = new WriteOutcome(new ErrorDetail(
+                        ErrorCategory.ModbusException,
                         ex.SlaveExceptionCode is 5 or 6 or 10 or 11, ex.Message,
                         modbusExceptionCode: ex.SlaveExceptionCode));
                 }

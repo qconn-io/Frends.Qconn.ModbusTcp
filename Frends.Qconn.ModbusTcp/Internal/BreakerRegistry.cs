@@ -35,6 +35,7 @@ internal static class BreakerRegistry
             b.Reset();
             return true;
         }
+
         return false;
     }
 

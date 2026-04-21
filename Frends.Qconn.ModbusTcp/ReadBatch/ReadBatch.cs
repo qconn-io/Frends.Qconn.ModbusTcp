@@ -269,11 +269,11 @@ public static class ReadBatch
     private static ErrorCategory MapSocketCategory(SocketException ex) =>
         ex.SocketErrorCode switch
         {
-            SocketError.ConnectionRefused  => ErrorCategory.ConnectionRefused,
-            SocketError.HostUnreachable    => ErrorCategory.HostUnreachable,
+            SocketError.ConnectionRefused => ErrorCategory.ConnectionRefused,
+            SocketError.HostUnreachable => ErrorCategory.HostUnreachable,
             SocketError.NetworkUnreachable => ErrorCategory.HostUnreachable,
-            SocketError.TimedOut           => ErrorCategory.Timeout,
-            _                              => ErrorCategory.SocketError,
+            SocketError.TimedOut => ErrorCategory.Timeout,
+            _ => ErrorCategory.SocketError,
         };
 
     private static bool IsTransientSocket(SocketException ex) =>

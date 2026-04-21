@@ -15,8 +15,8 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <Description>Read and write values on Modbus TCP slave devices. v2 adds writes, connection pooling, circuit breaker, retry, audit logging, and OpenTelemetry primitives.</Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageProjectUrl>https://frends.com/</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/FrendsPlatform/Frends.Qconn.ModbusTcp</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/qconn-io/Frends.Qconn.ModbusTcp</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/qconn-io/Frends.Qconn.ModbusTcp</RepositoryUrl>
         <Nullable>enable</Nullable>
         <NoWarn>$(NoWarn);CS1591;FT0001;FT0002;FT0003;FT0007;FT0010;FT0012;FT0014;FT0015;FT0016;FT0017;FT0018;SA1025;SA1117;SA1201;SA1402;SA1413;SA1519;SA1028;SA1122;SA1512;SA1516;SA1611;SA1615;SA1642;SA1649</NoWarn>
     </PropertyGroup>

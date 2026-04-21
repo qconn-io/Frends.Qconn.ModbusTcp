@@ -45,7 +45,8 @@ internal static class WriteExecutor
             if (options.CircuitBreaker.Enabled && !breaker.CanPass(BreakerRegistry.Clock))
             {
                 var diag = MakeDiag(0, 0, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount);
-                attemptResult = new WriteResult(new ErrorDetail(ErrorCategory.CircuitOpen, true,
+                attemptResult = new WriteResult(
+                    new ErrorDetail(ErrorCategory.CircuitOpen, true,
                     $"Circuit open for {host}:{port}/UnitId={unitId}."), diag);
                 attempts.Add(new AttemptRecord(attempt, 0, ErrorCategory.CircuitOpen, attemptResult.Error!.Message));
                 break;
@@ -111,12 +112,14 @@ internal static class WriteExecutor
         {
             var category = ex.Message.StartsWith("Acquire timed out", StringComparison.Ordinal)
                 ? ErrorCategory.Backpressure : ErrorCategory.Timeout;
-            return new WriteResult(new ErrorDetail(category, true, ex.Message),
+            return new WriteResult(
+                new ErrorDetail(category, true, ex.Message),
                 MakeDiag(acquireSw.ElapsedMilliseconds, 0, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
         }
         catch (SocketException ex)
         {
-            return new WriteResult(new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
+            return new WriteResult(
+                new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
                     socketErrorCode: ex.SocketErrorCode.ToString()),
                 MakeDiag(acquireSw.ElapsedMilliseconds, 0, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
         }
@@ -129,7 +132,8 @@ internal static class WriteExecutor
             try
             {
                 await op(lease.Master).ConfigureAwait(false);
-                return new WriteResult(wireCount,
+                return new WriteResult(
+                    wireCount,
                     MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -145,33 +149,38 @@ internal static class WriteExecutor
             catch (TimeoutException ex)
             {
                 lease.Poison();
-                return new WriteResult(new ErrorDetail(ErrorCategory.Timeout, true, ex.Message),
+                return new WriteResult(
+                    new ErrorDetail(ErrorCategory.Timeout, true, ex.Message),
                     MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
             }
             catch (SocketException ex)
             {
                 lease.Poison();
-                return new WriteResult(new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
+                return new WriteResult(
+                    new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
                         socketErrorCode: ex.SocketErrorCode.ToString()),
                     MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
             }
             catch (SlaveException ex)
             {
-                return new WriteResult(new ErrorDetail(ErrorCategory.ModbusException, IsTransientModbus(ex.SlaveExceptionCode),
+                return new WriteResult(
+                    new ErrorDetail(ErrorCategory.ModbusException, IsTransientModbus(ex.SlaveExceptionCode),
                         ex.Message, modbusExceptionCode: ex.SlaveExceptionCode),
                     MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
             }
             catch (IOException ex) when (ex.InnerException is SocketException inner)
             {
                 lease.Poison();
-                return new WriteResult(new ErrorDetail(MapSocketCategory(inner), IsTransientSocket(inner), ex.Message,
+                return new WriteResult(
+                    new ErrorDetail(MapSocketCategory(inner), IsTransientSocket(inner), ex.Message,
                         socketErrorCode: inner.SocketErrorCode.ToString()),
                     MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
             }
             catch (Exception ex)
             {
                 lease.Poison();
-                return new WriteResult(new ErrorDetail(ErrorCategory.Unexpected, false, ex.Message),
+                return new WriteResult(
+                    new ErrorDetail(ErrorCategory.Unexpected, false, ex.Message),
                     MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
             }
         }

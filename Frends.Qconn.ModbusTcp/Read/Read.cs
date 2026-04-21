@@ -179,12 +179,14 @@ public static class Read
             // distinguish by the message prefix from ConnectionPool.
             var category = ex.Message.StartsWith("Acquire timed out", StringComparison.Ordinal)
                 ? ErrorCategory.Backpressure : ErrorCategory.Timeout;
-            return Fail(new ErrorDetail(category, true, ex.Message),
+            return Fail(
+                new ErrorDetail(category, true, ex.Message),
                 acquireSw.ElapsedMilliseconds, 0, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount, 1);
         }
         catch (SocketException ex)
         {
-            return Fail(new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
+            return Fail(
+                new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
                     socketErrorCode: ex.SocketErrorCode.ToString()),
                 acquireSw.ElapsedMilliseconds, 0, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount, 1);
         }
@@ -242,38 +244,44 @@ public static class Read
             catch (TimeoutException ex)
             {
                 lease.Poison();
-                return Fail(new ErrorDetail(ErrorCategory.Timeout, true, ex.Message),
+                return Fail(
+                    new ErrorDetail(ErrorCategory.Timeout, true, ex.Message),
                     connectTimeMs, readSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount, 1);
             }
             catch (SocketException ex)
             {
                 lease.Poison();
-                return Fail(new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
+                return Fail(
+                    new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
                         socketErrorCode: ex.SocketErrorCode.ToString()),
                     connectTimeMs, readSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount, 1);
             }
             catch (SlaveException ex)
             {
-                return Fail(new ErrorDetail(ErrorCategory.ModbusException, IsTransientModbus(ex.SlaveExceptionCode),
+                return Fail(
+                    new ErrorDetail(ErrorCategory.ModbusException, IsTransientModbus(ex.SlaveExceptionCode),
                         ex.Message, modbusExceptionCode: ex.SlaveExceptionCode),
                     connectTimeMs, readSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount, 1);
             }
             catch (FormatException ex)
             {
-                return Fail(new ErrorDetail(ErrorCategory.DecodingError, false, ex.Message),
+                return Fail(
+                    new ErrorDetail(ErrorCategory.DecodingError, false, ex.Message),
                     connectTimeMs, readSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount, 1);
             }
             catch (IOException ex) when (ex.InnerException is SocketException inner)
             {
                 lease.Poison();
-                return Fail(new ErrorDetail(MapSocketCategory(inner), IsTransientSocket(inner), ex.Message,
+                return Fail(
+                    new ErrorDetail(MapSocketCategory(inner), IsTransientSocket(inner), ex.Message,
                         socketErrorCode: inner.SocketErrorCode.ToString()),
                     connectTimeMs, readSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount, 1);
             }
             catch (Exception ex)
             {
                 lease.Poison();
-                return Fail(new ErrorDetail(ErrorCategory.Unexpected, false, ex.Message),
+                return Fail(
+                    new ErrorDetail(ErrorCategory.Unexpected, false, ex.Message),
                     connectTimeMs, readSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount, 1);
             }
         }

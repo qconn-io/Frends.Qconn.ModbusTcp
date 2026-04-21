@@ -2,8 +2,8 @@
 
 Read and write typed, scaled, endianness-corrected values on Modbus TCP slave devices.
 
-[![build](https://github.com/FrendsPlatform/Frends.Qconn.ModbusTcp/actions/workflows/Read_test_on_main.yml/badge.svg)](https://github.com/FrendsPlatform/Frends.Qconn.ModbusTcp/actions/workflows/Read_test_on_main.yml)
-![Coverage](https://app-github-custom-badges.azurewebsites.net/Badge?key=FrendsPlatform/Frends.Qconn.ModbusTcp/Frends.Qconn.ModbusTcp|main)
+[![build](https://github.com/qconn-io/Frends.Qconn.ModbusTcp/actions/workflows/Read_test_on_main.yml/badge.svg)](https://github.com/qconn-io/Frends.Qconn.ModbusTcp/actions/workflows/Read_test_on_main.yml)
+![Coverage](https://app-github-custom-badges.azurewebsites.net/Badge?key=qconn-io/Frends.Qconn.ModbusTcp/Frends.Qconn.ModbusTcp|main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -649,11 +649,13 @@ Input: `Host`, `Port`, `UnitId`. Resets the breaker to Closed, zeroes the failur
 ## Building and testing
 
 ```bash
-git clone https://github.com/FrendsPlatform/Frends.Qconn.ModbusTcp.git
+git clone https://github.com/qconn-io/Frends.Qconn.ModbusTcp.git
 cd Frends.Qconn.ModbusTcp
 dotnet build
 dotnet test
 dotnet pack --configuration Release
 ```
+
+Public GitHub releases are created from version tags. After updating `CHANGELOG.md` and confirming `<Version>` in `Frends.Qconn.ModbusTcp.csproj`, push a tag such as `v2.0.7` to publish the package artifacts to the [Releases page](https://github.com/qconn-io/Frends.Qconn.ModbusTcp/releases).
 
 See [CHANGELOG.md](./CHANGELOG.md) for the full version history and [SECURITY.md](./SECURITY.md) for the Write threat model and TLS deployment guidance.

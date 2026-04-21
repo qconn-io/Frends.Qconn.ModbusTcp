@@ -16,17 +16,18 @@ namespace Frends.Qconn.ModbusTcp.Internal;
 internal static class ConnectionPool
 {
     // Key: (ConnectionKey, slot index). Allows MaxConnectionsPerDevice connections per device.
-    private static readonly ConcurrentDictionary<(ConnectionKey key, int slot), PooledConnection> _connections = new();
-    private static readonly Timer _evictionTimer;
-    private static readonly int _maxTotalConnections;
-    private static readonly int _maxConnectionsPerDeviceEnv; // 0 = env var not set
+    private static readonly ConcurrentDictionary<(ConnectionKey key, int slot), PooledConnection> connections = new();
+    private static readonly Timer evictionTimer;
+    private static readonly int maxTotalConnections;
+    private static readonly int maxConnectionsPerDeviceEnv; // 0 = env var not set
 
     static ConnectionPool()
     {
-        _maxTotalConnections = ReadIntEnv("ModbusTcp.MaxTotalConnections", 200);
-        _maxConnectionsPerDeviceEnv = ReadIntEnv("ModbusTcp.MaxConnectionsPerDevice", 0); // 0 = not set
+        maxTotalConnections = ReadIntEnv("ModbusTcp.MaxTotalConnections", 200);
+        maxConnectionsPerDeviceEnv = ReadIntEnv("ModbusTcp.MaxConnectionsPerDevice", 0); // 0 = not set
 
-        _evictionTimer = new Timer(_ => EvictIdleConnections(),
+        evictionTimer = new Timer(
+            _ => EvictIdleConnections(),
             state: null,
             dueTime: TimeSpan.FromSeconds(30),
             period: TimeSpan.FromSeconds(30));
@@ -52,7 +53,7 @@ internal static class ConnectionPool
         // Effective per-device cap: option takes priority over env var; env var takes priority over default 1.
         int maxPerDevice = options.Pool.MaxConnectionsPerDevice > 0
             ? options.Pool.MaxConnectionsPerDevice
-            : (_maxConnectionsPerDeviceEnv > 0 ? _maxConnectionsPerDeviceEnv : 1);
+            : (maxConnectionsPerDeviceEnv > 0 ? maxConnectionsPerDeviceEnv : 1);
 
         // Pooled path: scan slots to find a free connection or create one up to the cap.
         while (true)
@@ -65,16 +66,17 @@ internal static class ConnectionPool
 
             for (int slot = 0; slot < maxPerDevice; slot++)
             {
-                if (_connections.TryGetValue((key, slot), out var existing))
+                if (connections.TryGetValue((key, slot), out var existing))
                 {
                     if (existing.IsDisposed)
                     {
                         // Slot has a disposed connection — clean it up and reuse the slot.
-                        _connections.TryRemove(
+                        connections.TryRemove(
                             new KeyValuePair<(ConnectionKey key, int slot), PooledConnection>((key, slot), existing));
                         nextFreeSlot = slot;
                         continue;
                     }
+
                     if (!existing.InUse && candidate == null)
                         candidate = existing;
                 }
@@ -99,6 +101,7 @@ internal static class ConnectionPool
                 if (candidate.IsDisposed || !candidate.TcpClient.Connected)
                 {
                     candidate.Release(success: false);
+
                     // Connection died between the scan and the enter; retry.
                     continue;
                 }
@@ -110,11 +113,11 @@ internal static class ConnectionPool
             // --- Step 3: create a new connection in a free slot ---
             if (nextFreeSlot >= 0)
             {
-                if (_connections.Count >= _maxTotalConnections)
+                if (connections.Count >= maxTotalConnections)
                 {
                     Telemetry.BackpressureRejected.Add(1);
                     throw new InvalidOperationException(
-                        $"Agent-wide connection cap reached ({_maxTotalConnections}). Close idle Processes or raise ModbusTcp.MaxTotalConnections.");
+                        $"Agent-wide connection cap reached ({maxTotalConnections}). Close idle Processes or raise ModbusTcp.MaxTotalConnections.");
                 }
 
                 var (tcp, connectMs) = await ModbusConnection
@@ -128,7 +131,7 @@ internal static class ConnectionPool
                 {
                     IdleBudgetMs = options.Pool.IdleTimeoutMs,
                 };
-                if (!_connections.TryAdd((key, nextFreeSlot), pooled))
+                if (!connections.TryAdd((key, nextFreeSlot), pooled))
                 {
                     await pooled.DisposeAsync().ConfigureAwait(false);
                     continue; // Slot was taken by a concurrent caller; retry.
@@ -138,18 +141,19 @@ internal static class ConnectionPool
                     .ConfigureAwait(false);
                 if (!firstEntered)
                 {
-                    _connections.TryRemove(
+                    connections.TryRemove(
                         new KeyValuePair<(ConnectionKey key, int slot), PooledConnection>((key, nextFreeSlot), pooled));
                     await pooled.DisposeAsync().ConfigureAwait(false);
                     Telemetry.BackpressureRejected.Add(1);
                     throw new TimeoutException(
                         $"Acquire timed out after {options.Pool.AcquireTimeoutMs} ms on a freshly-created connection to {key.Host}:{key.Port}.");
                 }
+
                 return new ModbusLease(pooled, connectTimeMs: connectMs, fromPool: false);
             }
 
             // --- Step 4: all slots busy; wait on the first non-disposed slot ---
-            if (_connections.TryGetValue((key, 0), out var firstConn) && !firstConn.IsDisposed)
+            if (connections.TryGetValue((key, 0), out var firstConn) && !firstConn.IsDisposed)
             {
                 bool entered = await firstConn.TryEnterAsync(options.Pool.AcquireTimeoutMs, cancellationToken)
                     .ConfigureAwait(false);
@@ -191,11 +195,11 @@ internal static class ConnectionPool
     internal static void Drop(PooledConnection pooled)
     {
         // Search all slots for this connection and remove it.
-        foreach (var kv in _connections.ToArray())
+        foreach (var kv in connections.ToArray())
         {
             if (ReferenceEquals(kv.Value, pooled))
             {
-                _connections.TryRemove(kv);
+                connections.TryRemove(kv);
                 return;
             }
         }
@@ -203,7 +207,7 @@ internal static class ConnectionPool
 
     public static PoolSnapshot Snapshot()
     {
-        var connections = _connections.Values.ToArray();
+        var connections = ConnectionPool.connections.Values.ToArray();
         var perDevice = connections
             .GroupBy(c => (c.Key.Host, c.Key.Port, c.Key.UnitId))
             .Select(g => new PerDeviceStats(
@@ -223,13 +227,13 @@ internal static class ConnectionPool
     private static void EvictIdleConnections()
     {
         var now = DateTimeOffset.UtcNow;
-        foreach (var kv in _connections.ToArray())
+        foreach (var kv in connections.ToArray())
         {
             var conn = kv.Value;
             var idleBudget = TimeSpan.FromMilliseconds(conn.IdleBudgetMs);
             if (conn.IsDisposed || now - conn.LastUsedUtc > idleBudget)
             {
-                if (_connections.TryRemove(kv))
+                if (connections.TryRemove(kv))
                 {
                     _ = conn.DisposeAsync().AsTask();
                     Telemetry.ConnectionsEvicted.Add(1);
@@ -240,11 +244,17 @@ internal static class ConnectionPool
 
     private static void DisposeAll()
     {
-        _evictionTimer.Dispose();
-        foreach (var kv in _connections.ToArray())
+        evictionTimer.Dispose();
+        foreach (var kv in connections.ToArray())
         {
-            _connections.TryRemove(kv);
-            try { kv.Value.DisposeAsync().AsTask().Wait(TimeSpan.FromSeconds(5)); } catch { }
+            connections.TryRemove(kv);
+            try
+            {
+                kv.Value.DisposeAsync().AsTask().Wait(TimeSpan.FromSeconds(5));
+            }
+            catch
+            {
+            }
         }
     }
 
@@ -254,11 +264,17 @@ internal static class ConnectionPool
     /// <summary>Drains all pooled connections. Intended for test teardown only.</summary>
     internal static void ResetForTests()
     {
-        foreach (var kv in _connections.ToArray())
+        foreach (var kv in connections.ToArray())
         {
-            if (_connections.TryRemove(kv))
+            if (connections.TryRemove(kv))
             {
-                try { kv.Value.DisposeAsync().AsTask().Wait(TimeSpan.FromSeconds(5)); } catch { }
+                try
+                {
+                    kv.Value.DisposeAsync().AsTask().Wait(TimeSpan.FromSeconds(5));
+                }
+                catch
+                {
+                }
             }
         }
     }
