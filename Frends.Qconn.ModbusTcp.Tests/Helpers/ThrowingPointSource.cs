@@ -41,14 +41,14 @@ internal sealed class BoundedSlaveDataStore : ISlaveDataStore
 {
     public BoundedSlaveDataStore(ushort maxAddress = 1000)
     {
-        CoilDiscretes   = new ThrowingPointSource<bool>(maxAddress);
-        CoilInputs      = new ThrowingPointSource<bool>(maxAddress);
+        CoilDiscretes = new ThrowingPointSource<bool>(maxAddress);
+        CoilInputs = new ThrowingPointSource<bool>(maxAddress);
         HoldingRegisters = new ThrowingPointSource<ushort>(maxAddress);
-        InputRegisters  = new ThrowingPointSource<ushort>(maxAddress);
+        InputRegisters = new ThrowingPointSource<ushort>(maxAddress);
     }
 
-    public IPointSource<bool>   CoilDiscretes    { get; }
-    public IPointSource<bool>   CoilInputs       { get; }
+    public IPointSource<bool> CoilDiscretes { get; }
+    public IPointSource<bool> CoilInputs { get; }
     public IPointSource<ushort> HoldingRegisters { get; }
-    public IPointSource<ushort> InputRegisters   { get; }
+    public IPointSource<ushort> InputRegisters { get; }
 }

@@ -8,7 +8,12 @@ namespace Frends.Qconn.ModbusTcp.Internal;
 internal sealed class CircuitBreaker
 {
 #pragma warning disable FT0004
-    internal enum State { Closed, Open, HalfOpen }
+    internal enum State
+    {
+        Closed,
+        Open,
+        HalfOpen
+    }
 #pragma warning restore FT0004
 
     private readonly object gate = new();
@@ -42,6 +47,7 @@ internal sealed class CircuitBreaker
                 halfOpenSuccesses = 0;
                 return true;
             }
+
             return false;
         }
     }

@@ -63,7 +63,9 @@ public class RetryIntegrationTests : IDisposable
         var result = await ReadBatchTask.ReadBatchData(
             new BatchInput
             {
-                Host = "127.0.0.1", Port = server.Port, UnitId = 1,
+                Host = "127.0.0.1",
+                Port = server.Port,
+                UnitId = 1,
                 Items = new List<BatchReadItem>
                 {
                     new BatchReadItem { Name = "r1", DataType = ModbusDataType.HoldingRegisters, StartAddress = 0, NumberOfValues = 1 },
@@ -118,9 +120,14 @@ public class RetryIntegrationTests : IDisposable
         var result = await WriteMultiple.WriteData(
             new WriteInput
             {
-                Host = "127.0.0.1", Port = server.Port, UnitId = 1,
-                DataType = ModbusDataType.HoldingRegisters, StartAddress = 10,
-                NumberOfValues = 2, ValueType = ModbusValueType.UInt16, Values = new[] { 1, 2 },
+                Host = "127.0.0.1",
+                Port = server.Port,
+                UnitId = 1,
+                DataType = ModbusDataType.HoldingRegisters,
+                StartAddress = 10,
+                NumberOfValues = 2,
+                ValueType = ModbusValueType.UInt16,
+                Values = new[] { 1, 2 },
             },
             new WriteOptions { ThrowOnFailure = false, Retry = SocketRetryOpts() }, CancellationToken.None);
 
@@ -139,9 +146,13 @@ public class RetryIntegrationTests : IDisposable
         var result = await ReadWriteMultiple.ReadWriteData(
             new ReadWriteMultipleInput
             {
-                Host = "127.0.0.1", Port = server.Port, UnitId = 1,
-                ReadStartAddress = 0, ReadRegisterCount = 1,
-                WriteStartAddress = 0, WriteRegisters = new ushort[] { 100 },
+                Host = "127.0.0.1",
+                Port = server.Port,
+                UnitId = 1,
+                ReadStartAddress = 0,
+                ReadRegisterCount = 1,
+                WriteStartAddress = 0,
+                WriteRegisters = new ushort[] { 100 },
             },
             new WriteOptions { ThrowOnFailure = false, Retry = SocketRetryOpts() }, CancellationToken.None);
 
@@ -160,7 +171,9 @@ public class RetryIntegrationTests : IDisposable
         var result = await WriteBatch.WriteBatchData(
             new WriteBatchInput
             {
-                Host = "127.0.0.1", Port = server.Port, UnitId = 1,
+                Host = "127.0.0.1",
+                Port = server.Port,
+                UnitId = 1,
                 Items = new List<WriteBatchItem>
                 {
                     new WriteBatchItem { Name = "w1", DataType = ModbusDataType.HoldingRegisters, StartAddress = 0, NumberOfValues = 1, ValueType = ModbusValueType.UInt16, Values = new[] { 7 } },

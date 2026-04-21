@@ -11,11 +11,12 @@ internal static class ModbusDecoder
     internal static ushort TranslateAddress(ushort address, AddressingMode mode)
     {
         if (mode == AddressingMode.ZeroBased) return address;
+
         // ModiconOneBased: strip leading range prefix and subtract 1
         if (address >= 40001) return (ushort)(address - 40001);
         if (address >= 30001) return (ushort)(address - 30001);
         if (address >= 10001) return (ushort)(address - 10001);
-        if (address >= 1)     return (ushort)(address - 1);
+        if (address >= 1) return (ushort)(address - 1);
         return address;
     }
 
@@ -50,69 +51,71 @@ internal static class ModbusDecoder
                 return registers;
 
             case ModbusValueType.Int16:
-            {
-                var result = new short[numberOfValues];
-                for (int i = 0; i < numberOfValues; i++)
-                    result[i] = (short)registers[i];
-                if (!scaleNeeded) return result;
-                return ApplyScale(result, scale, offset);
-            }
+                {
+                    var result = new short[numberOfValues];
+                    for (int i = 0; i < numberOfValues; i++)
+                        result[i] = (short)registers[i];
+                    if (!scaleNeeded) return result;
+                    return ApplyScale(result, scale, offset);
+                }
 
             case ModbusValueType.UInt16:
-            {
-                if (!scaleNeeded) return registers;
-                return ApplyScale(registers, scale, offset);
-            }
+                {
+                    if (!scaleNeeded) return registers;
+                    return ApplyScale(registers, scale, offset);
+                }
 
             case ModbusValueType.Int32:
-            {
-                var result = new int[numberOfValues];
-                for (int i = 0; i < numberOfValues; i++)
-                    result[i] = BitConverter.ToInt32(GetBytes32(registers[i * 2], registers[i * 2 + 1], byteOrder), 0);
-                if (!scaleNeeded) return result;
-                return ApplyScale(result, scale, offset);
-            }
+                {
+                    var result = new int[numberOfValues];
+                    for (int i = 0; i < numberOfValues; i++)
+                        result[i] = BitConverter.ToInt32(GetBytes32(registers[i * 2], registers[(i * 2) + 1], byteOrder), 0);
+                    if (!scaleNeeded) return result;
+                    return ApplyScale(result, scale, offset);
+                }
 
             case ModbusValueType.UInt32:
-            {
-                var result = new uint[numberOfValues];
-                for (int i = 0; i < numberOfValues; i++)
-                    result[i] = BitConverter.ToUInt32(GetBytes32(registers[i * 2], registers[i * 2 + 1], byteOrder), 0);
-                if (!scaleNeeded) return result;
-                return ApplyScale(result, scale, offset);
-            }
+                {
+                    var result = new uint[numberOfValues];
+                    for (int i = 0; i < numberOfValues; i++)
+                        result[i] = BitConverter.ToUInt32(GetBytes32(registers[i * 2], registers[(i * 2) + 1], byteOrder), 0);
+                    if (!scaleNeeded) return result;
+                    return ApplyScale(result, scale, offset);
+                }
 
             case ModbusValueType.Float32:
-            {
-                var result = new float[numberOfValues];
-                for (int i = 0; i < numberOfValues; i++)
-                    result[i] = BitConverter.ToSingle(GetBytes32(registers[i * 2], registers[i * 2 + 1], byteOrder), 0);
-                if (!scaleNeeded) return result;
-                return ApplyScale(result, scale, offset);
-            }
+                {
+                    var result = new float[numberOfValues];
+                    for (int i = 0; i < numberOfValues; i++)
+                        result[i] = BitConverter.ToSingle(GetBytes32(registers[i * 2], registers[(i * 2) + 1], byteOrder), 0);
+                    if (!scaleNeeded) return result;
+                    return ApplyScale(result, scale, offset);
+                }
 
             case ModbusValueType.Float64:
-            {
-                var result = new double[numberOfValues];
-                for (int i = 0; i < numberOfValues; i++)
                 {
-                    double raw = BitConverter.ToDouble(
-                        GetBytes64(registers[i * 4], registers[i * 4 + 1], registers[i * 4 + 2], registers[i * 4 + 3], byteOrder), 0);
-                    result[i] = raw * scale + offset;
+                    var result = new double[numberOfValues];
+                    for (int i = 0; i < numberOfValues; i++)
+                    {
+                        double raw = BitConverter.ToDouble(
+                            GetBytes64(registers[i * 4], registers[(i * 4) + 1], registers[(i * 4) + 2], registers[(i * 4) + 3], byteOrder), 0);
+                        result[i] = (raw * scale) + offset;
+                    }
+
+                    return result;
                 }
-                return result;
-            }
 
             case ModbusValueType.AsciiString:
-            {
-                var bytes = new byte[registers.Length * 2];
-                for (int i = 0; i < registers.Length; i++)
                 {
-                    bytes[i * 2]     = (byte)(registers[i] >> 8);
-                    bytes[i * 2 + 1] = (byte)(registers[i] & 0xFF);
+                    var bytes = new byte[registers.Length * 2];
+                    for (int i = 0; i < registers.Length; i++)
+                    {
+                        bytes[i * 2] = (byte)(registers[i] >> 8);
+                        bytes[(i * 2) + 1] = (byte)(registers[i] & 0xFF);
+                    }
+
+                    return Encoding.ASCII.GetString(bytes).TrimEnd('\0');
                 }
-                return Encoding.ASCII.GetString(bytes).TrimEnd('\0');
-            }
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(valueType), valueType, null);
@@ -127,10 +130,10 @@ internal static class ModbusDecoder
     //   LittleEndianWordSwap (CDAB): reg0=C,D  reg1=A,B  → LE[D,C,B,A] = [r0L,r0H,r1L,r1H]
     private static byte[] GetBytes32(ushort r0, ushort r1, ByteOrder order) => order switch
     {
-        ByteOrder.BigEndian            => [(byte)(r1 & 0xFF), (byte)(r1 >> 8), (byte)(r0 & 0xFF), (byte)(r0 >> 8)],
-        ByteOrder.LittleEndian         => [(byte)(r0 >> 8),   (byte)(r0 & 0xFF), (byte)(r1 >> 8), (byte)(r1 & 0xFF)],
-        ByteOrder.BigEndianByteSwap    => [(byte)(r1 >> 8),   (byte)(r1 & 0xFF), (byte)(r0 >> 8), (byte)(r0 & 0xFF)],
-        ByteOrder.LittleEndianWordSwap => [(byte)(r0 & 0xFF), (byte)(r0 >> 8),   (byte)(r1 & 0xFF), (byte)(r1 >> 8)],
+        ByteOrder.BigEndian => [(byte)(r1 & 0xFF), (byte)(r1 >> 8), (byte)(r0 & 0xFF), (byte)(r0 >> 8)],
+        ByteOrder.LittleEndian => [(byte)(r0 >> 8), (byte)(r0 & 0xFF), (byte)(r1 >> 8), (byte)(r1 & 0xFF)],
+        ByteOrder.BigEndianByteSwap => [(byte)(r1 >> 8), (byte)(r1 & 0xFF), (byte)(r0 >> 8), (byte)(r0 & 0xFF)],
+        ByteOrder.LittleEndianWordSwap => [(byte)(r0 & 0xFF), (byte)(r0 >> 8), (byte)(r1 & 0xFF), (byte)(r1 >> 8)],
         _ => throw new ArgumentOutOfRangeException(nameof(order), order, null),
     };
 
@@ -172,35 +175,35 @@ internal static class ModbusDecoder
     private static double[] ApplyScale(short[] values, double scale, double offset)
     {
         var d = new double[values.Length];
-        for (int i = 0; i < values.Length; i++) d[i] = values[i] * scale + offset;
+        for (int i = 0; i < values.Length; i++) d[i] = (values[i] * scale) + offset;
         return d;
     }
 
     private static double[] ApplyScale(ushort[] values, double scale, double offset)
     {
         var d = new double[values.Length];
-        for (int i = 0; i < values.Length; i++) d[i] = values[i] * scale + offset;
+        for (int i = 0; i < values.Length; i++) d[i] = (values[i] * scale) + offset;
         return d;
     }
 
     private static double[] ApplyScale(int[] values, double scale, double offset)
     {
         var d = new double[values.Length];
-        for (int i = 0; i < values.Length; i++) d[i] = values[i] * scale + offset;
+        for (int i = 0; i < values.Length; i++) d[i] = (values[i] * scale) + offset;
         return d;
     }
 
     private static double[] ApplyScale(uint[] values, double scale, double offset)
     {
         var d = new double[values.Length];
-        for (int i = 0; i < values.Length; i++) d[i] = values[i] * scale + offset;
+        for (int i = 0; i < values.Length; i++) d[i] = (values[i] * scale) + offset;
         return d;
     }
 
     private static double[] ApplyScale(float[] values, double scale, double offset)
     {
         var d = new double[values.Length];
-        for (int i = 0; i < values.Length; i++) d[i] = values[i] * scale + offset;
+        for (int i = 0; i < values.Length; i++) d[i] = (values[i] * scale) + offset;
         return d;
     }
 }

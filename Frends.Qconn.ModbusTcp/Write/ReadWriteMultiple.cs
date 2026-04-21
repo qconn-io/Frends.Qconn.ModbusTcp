@@ -51,7 +51,8 @@ public static class ReadWriteMultiple
             {
                 var diag = new Diagnostics(0, 0, totalSw.ElapsedMilliseconds,
                     input.Host, input.Port, input.UnitId, readAddr, readCount);
-                attemptResult = new ReadWriteMultipleResult(new ErrorDetail(ErrorCategory.CircuitOpen, true,
+                attemptResult = new ReadWriteMultipleResult(
+                    new ErrorDetail(ErrorCategory.CircuitOpen, true,
                     $"Circuit open for {input.Host}:{input.Port}/UnitId={input.UnitId}."), diag);
                 attempts.Add(new AttemptRecord(attempt, 0, ErrorCategory.CircuitOpen, attemptResult.Error!.Message));
                 break;

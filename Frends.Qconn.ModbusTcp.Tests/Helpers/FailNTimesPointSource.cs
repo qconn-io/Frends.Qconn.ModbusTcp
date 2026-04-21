@@ -41,15 +41,15 @@ internal sealed class FailNTimesSlaveDataStore : ISlaveDataStore
     public FailNTimesSlaveDataStore(int failCount, ushort maxAddress = 1000)
     {
         var inner = new BoundedSlaveDataStore(maxAddress);
-        CoilDiscretes    = new FailNTimesPointSource<bool>(inner.CoilDiscretes, failCount);
-        CoilInputs       = new FailNTimesPointSource<bool>(inner.CoilInputs, failCount);
+        CoilDiscretes = new FailNTimesPointSource<bool>(inner.CoilDiscretes, failCount);
+        CoilInputs = new FailNTimesPointSource<bool>(inner.CoilInputs, failCount);
         HoldingRegisters = new FailNTimesPointSource<ushort>(inner.HoldingRegisters, failCount);
-        InputRegisters   = new FailNTimesPointSource<ushort>(inner.InputRegisters, failCount);
+        InputRegisters = new FailNTimesPointSource<ushort>(inner.InputRegisters, failCount);
     }
 
-    public IPointSource<bool>   CoilDiscretes    { get; }
-    public IPointSource<bool>   CoilInputs       { get; }
+    public IPointSource<bool> CoilDiscretes { get; }
+    public IPointSource<bool> CoilInputs { get; }
     public IPointSource<ushort> HoldingRegisters { get; }
-    public IPointSource<ushort> InputRegisters   { get; }
+    public IPointSource<ushort> InputRegisters { get; }
 }
 

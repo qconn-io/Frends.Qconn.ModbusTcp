@@ -11,8 +11,8 @@ namespace Frends.Qconn.ModbusTcp.Internal;
 /// Per-connection semaphore enforces single-request-in-flight semantics (Modbus req/resp is serial per connection).</summary>
 internal sealed class PooledConnection : IAsyncDisposable
 {
-    private readonly SemaphoreSlim _gate = new(1, 1);
-    private int _disposed;
+    private readonly SemaphoreSlim gate = new(1, 1);
+    private int disposed;
 
     public ConnectionKey Key { get; }
     public TcpClient TcpClient { get; }
@@ -23,7 +23,7 @@ internal sealed class PooledConnection : IAsyncDisposable
     public long TotalErrors { get; private set; }
     public DateTimeOffset? LastErrorUtc { get; private set; }
 
-    public bool IsDisposed => Volatile.Read(ref _disposed) == 1;
+    public bool IsDisposed => Volatile.Read(ref disposed) == 1;
 
     /// <summary>True while a caller holds a lease on this connection (between TryEnterAsync and Release).</summary>
     public bool InUse { get; private set; }
@@ -44,7 +44,7 @@ internal sealed class PooledConnection : IAsyncDisposable
     /// Returns true on success — caller must call Release exactly once.</summary>
     public async Task<bool> TryEnterAsync(int timeoutMs, CancellationToken cancellationToken)
     {
-        bool entered = await _gate.WaitAsync(timeoutMs, cancellationToken).ConfigureAwait(false);
+        bool entered = await gate.WaitAsync(timeoutMs, cancellationToken).ConfigureAwait(false);
         if (entered) InUse = true;
         return entered;
     }
@@ -59,16 +59,29 @@ internal sealed class PooledConnection : IAsyncDisposable
             TotalErrors++;
             LastErrorUtc = LastUsedUtc;
         }
+
         InUse = false;
-        _gate.Release();
+        gate.Release();
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
-        try { Master.Dispose(); } catch { /* NModbus master disposes the TcpClient */ }
-        try { TcpClient.Dispose(); } catch { }
+        if (Interlocked.Exchange(ref disposed, 1) == 1) return;
+        try
+        {
+            Master.Dispose();
+        }
+        catch
+        { /* NModbus master disposes the TcpClient */
+        }
+        try
+        {
+            TcpClient.Dispose();
+        }
+        catch
+        {
+        }
         await Task.CompletedTask;
-        _gate.Dispose();
+        gate.Dispose();
     }
 }

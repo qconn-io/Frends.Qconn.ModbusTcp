@@ -108,50 +108,50 @@ internal sealed class FaultInjectionServer : IDisposable
         {
             case 1: // Read Coils
             case 2: // Read Discrete Inputs
-            {
-                // Quantity is at pdu[4..5] (pdu[2..3] is starting address).
-                ushort count = (pdu.Length >= 6) ? (ushort)((pdu[4] << 8) | pdu[5]) : (ushort)1;
-                int byteCount = (count + 7) / 8;
-                var body = new byte[3 + byteCount];
-                body[0] = unitId; body[1] = fc; body[2] = (byte)byteCount;
-                int len = body.Length;
-                return BuildMbap(thi, tlo, len, body);
-            }
+                {
+                    // Quantity is at pdu[4..5] (pdu[2..3] is starting address).
+                    ushort count = (pdu.Length >= 6) ? (ushort)((pdu[4] << 8) | pdu[5]) : (ushort)1;
+                    int byteCount = (count + 7) / 8;
+                    var body = new byte[3 + byteCount];
+                    body[0] = unitId; body[1] = fc; body[2] = (byte)byteCount;
+                    int len = body.Length;
+                    return BuildMbap(thi, tlo, len, body);
+                }
             case 3: // Read Holding Registers
             case 4: // Read Input Registers
-            {
-                // Quantity is at pdu[4..5] (pdu[2..3] is starting address).
-                ushort count = (pdu.Length >= 6) ? (ushort)((pdu[4] << 8) | pdu[5]) : (ushort)1;
-                var body = new byte[3 + count * 2];
-                body[0] = unitId; body[1] = fc; body[2] = (byte)(count * 2);
-                return BuildMbap(thi, tlo, body.Length, body);
-            }
+                {
+                    // Quantity is at pdu[4..5] (pdu[2..3] is starting address).
+                    ushort count = (pdu.Length >= 6) ? (ushort)((pdu[4] << 8) | pdu[5]) : (ushort)1;
+                    var body = new byte[3 + count * 2];
+                    body[0] = unitId; body[1] = fc; body[2] = (byte)(count * 2);
+                    return BuildMbap(thi, tlo, body.Length, body);
+                }
             case 5: // Write Single Coil — echo request
             case 6: // Write Single Register — echo request
-            {
-                var body = new byte[] { unitId, fc, pdu[2], pdu[3], pdu[4], pdu[5] };
-                return BuildMbap(thi, tlo, 6, body);
-            }
+                {
+                    var body = new byte[] { unitId, fc, pdu[2], pdu[3], pdu[4], pdu[5] };
+                    return BuildMbap(thi, tlo, 6, body);
+                }
             case 15: // Write Multiple Coils
             case 16: // Write Multiple Registers
-            {
-                var body = new byte[] { unitId, fc, pdu[2], pdu[3], pdu[4], pdu[5] };
-                return BuildMbap(thi, tlo, 6, body);
-            }
+                {
+                    var body = new byte[] { unitId, fc, pdu[2], pdu[3], pdu[4], pdu[5] };
+                    return BuildMbap(thi, tlo, 6, body);
+                }
             case 23: // Read/Write Multiple Registers
-            {
-                // Read quantity is at pdu[4..5] (pdu[2..3] is read starting address).
-                ushort readCount = (pdu.Length >= 6) ? (ushort)((pdu[4] << 8) | pdu[5]) : (ushort)1;
-                var body = new byte[3 + readCount * 2];
-                body[0] = unitId; body[1] = fc; body[2] = (byte)(readCount * 2);
-                return BuildMbap(thi, tlo, body.Length, body);
-            }
+                {
+                    // Read quantity is at pdu[4..5] (pdu[2..3] is read starting address).
+                    ushort readCount = (pdu.Length >= 6) ? (ushort)((pdu[4] << 8) | pdu[5]) : (ushort)1;
+                    var body = new byte[3 + readCount * 2];
+                    body[0] = unitId; body[1] = fc; body[2] = (byte)(readCount * 2);
+                    return BuildMbap(thi, tlo, body.Length, body);
+                }
             default:
-            {
-                // Generic echo of first 6 bytes.
-                var body = new byte[] { unitId, fc, 0, 0, 0, 0 };
-                return BuildMbap(thi, tlo, 6, body);
-            }
+                {
+                    // Generic echo of first 6 bytes.
+                    var body = new byte[] { unitId, fc, 0, 0, 0, 0 };
+                    return BuildMbap(thi, tlo, 6, body);
+                }
         }
     }
 

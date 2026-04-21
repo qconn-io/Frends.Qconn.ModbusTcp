@@ -33,76 +33,80 @@ internal static class ModbusEncoder
                 return ToUShortArray(values);
 
             case ModbusValueType.UInt16:
-            {
-                var arr = ToUShortArray(values, scaleNeeded ? InvScale : null);
-                return arr;
-            }
+                {
+                    var arr = ToUShortArray(values, scaleNeeded ? InvScale : null);
+                    return arr;
+                }
 
             case ModbusValueType.Int16:
-            {
-                var arr = ToShortArray(values, scaleNeeded ? InvScale : null);
-                var regs = new ushort[arr.Length];
-                for (int i = 0; i < arr.Length; i++) regs[i] = unchecked((ushort)arr[i]);
-                return regs;
-            }
+                {
+                    var arr = ToShortArray(values, scaleNeeded ? InvScale : null);
+                    var regs = new ushort[arr.Length];
+                    for (int i = 0; i < arr.Length; i++) regs[i] = unchecked((ushort)arr[i]);
+                    return regs;
+                }
 
             case ModbusValueType.Int32:
-            {
-                var arr = ToInt32Array(values, scaleNeeded ? InvScale : null);
-                var regs = new ushort[arr.Length * 2];
-                for (int i = 0; i < arr.Length; i++)
                 {
-                    var bytes = BitConverter.GetBytes(arr[i]);
-                    var (r0, r1) = BytesToRegisters32(bytes, byteOrder);
-                    regs[i * 2] = r0;
-                    regs[i * 2 + 1] = r1;
+                    var arr = ToInt32Array(values, scaleNeeded ? InvScale : null);
+                    var regs = new ushort[arr.Length * 2];
+                    for (int i = 0; i < arr.Length; i++)
+                    {
+                        var bytes = BitConverter.GetBytes(arr[i]);
+                        var (r0, r1) = BytesToRegisters32(bytes, byteOrder);
+                        regs[i * 2] = r0;
+                        regs[(i * 2) + 1] = r1;
+                    }
+
+                    return regs;
                 }
-                return regs;
-            }
 
             case ModbusValueType.UInt32:
-            {
-                var arr = ToUInt32Array(values, scaleNeeded ? InvScale : null);
-                var regs = new ushort[arr.Length * 2];
-                for (int i = 0; i < arr.Length; i++)
                 {
-                    var bytes = BitConverter.GetBytes(arr[i]);
-                    var (r0, r1) = BytesToRegisters32(bytes, byteOrder);
-                    regs[i * 2] = r0;
-                    regs[i * 2 + 1] = r1;
+                    var arr = ToUInt32Array(values, scaleNeeded ? InvScale : null);
+                    var regs = new ushort[arr.Length * 2];
+                    for (int i = 0; i < arr.Length; i++)
+                    {
+                        var bytes = BitConverter.GetBytes(arr[i]);
+                        var (r0, r1) = BytesToRegisters32(bytes, byteOrder);
+                        regs[i * 2] = r0;
+                        regs[(i * 2) + 1] = r1;
+                    }
+
+                    return regs;
                 }
-                return regs;
-            }
 
             case ModbusValueType.Float32:
-            {
-                var arr = ToFloat32Array(values, scaleNeeded ? InvScale : null);
-                var regs = new ushort[arr.Length * 2];
-                for (int i = 0; i < arr.Length; i++)
                 {
-                    var bytes = BitConverter.GetBytes(arr[i]);
-                    var (r0, r1) = BytesToRegisters32(bytes, byteOrder);
-                    regs[i * 2] = r0;
-                    regs[i * 2 + 1] = r1;
+                    var arr = ToFloat32Array(values, scaleNeeded ? InvScale : null);
+                    var regs = new ushort[arr.Length * 2];
+                    for (int i = 0; i < arr.Length; i++)
+                    {
+                        var bytes = BitConverter.GetBytes(arr[i]);
+                        var (r0, r1) = BytesToRegisters32(bytes, byteOrder);
+                        regs[i * 2] = r0;
+                        regs[(i * 2) + 1] = r1;
+                    }
+
+                    return regs;
                 }
-                return regs;
-            }
 
             case ModbusValueType.Float64:
-            {
-                var arr = ToFloat64Array(values, scaleNeeded ? InvScale : null);
-                var regs = new ushort[arr.Length * 4];
-                for (int i = 0; i < arr.Length; i++)
                 {
-                    var bytes = BitConverter.GetBytes(arr[i]);
-                    var (r0, r1, r2, r3) = BytesToRegisters64(bytes, byteOrder);
-                    regs[i * 4] = r0;
-                    regs[i * 4 + 1] = r1;
-                    regs[i * 4 + 2] = r2;
-                    regs[i * 4 + 3] = r3;
+                    var arr = ToFloat64Array(values, scaleNeeded ? InvScale : null);
+                    var regs = new ushort[arr.Length * 4];
+                    for (int i = 0; i < arr.Length; i++)
+                    {
+                        var bytes = BitConverter.GetBytes(arr[i]);
+                        var (r0, r1, r2, r3) = BytesToRegisters64(bytes, byteOrder);
+                        regs[i * 4] = r0;
+                        regs[(i * 4) + 1] = r1;
+                        regs[(i * 4) + 2] = r2;
+                        regs[(i * 4) + 3] = r3;
+                    }
+
+                    return regs;
                 }
-                return regs;
-            }
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(valueType), valueType, null);
@@ -122,7 +126,7 @@ internal static class ModbusEncoder
 
         var regs = new ushort[registerCount];
         for (int i = 0; i < registerCount; i++)
-            regs[i] = (ushort)((bytes[i * 2] << 8) | bytes[i * 2 + 1]);
+            regs[i] = (ushort)((bytes[i * 2] << 8) | bytes[(i * 2) + 1]);
         return regs;
     }
 
@@ -132,10 +136,13 @@ internal static class ModbusEncoder
     {
         // Decoder: LE = [r1L, r1H, r0L, r0H]
         ByteOrder.BigEndian => ((ushort)((le[3] << 8) | le[2]), (ushort)((le[1] << 8) | le[0])),
+
         // Decoder: LE = [r0H, r0L, r1H, r1L]
         ByteOrder.LittleEndian => ((ushort)((le[0] << 8) | le[1]), (ushort)((le[2] << 8) | le[3])),
+
         // Decoder: LE = [r1H, r1L, r0H, r0L]
         ByteOrder.BigEndianByteSwap => ((ushort)((le[2] << 8) | le[3]), (ushort)((le[0] << 8) | le[1])),
+
         // Decoder: LE = [r0L, r0H, r1L, r1H]
         ByteOrder.LittleEndianWordSwap => ((ushort)((le[1] << 8) | le[0]), (ushort)((le[3] << 8) | le[2])),
         _ => throw new ArgumentOutOfRangeException(nameof(order), order, null),
@@ -177,6 +184,7 @@ internal static class ModbusEncoder
             double v = scale is null ? doubles[i] : scale(doubles[i]);
             regs[i] = (ushort)Math.Round(v);
         }
+
         return regs;
     }
 
@@ -189,6 +197,7 @@ internal static class ModbusEncoder
             double v = scale is null ? doubles[i] : scale(doubles[i]);
             arr[i] = (short)Math.Round(v);
         }
+
         return arr;
     }
 
@@ -201,6 +210,7 @@ internal static class ModbusEncoder
             double v = scale is null ? doubles[i] : scale(doubles[i]);
             arr[i] = (int)Math.Round(v);
         }
+
         return arr;
     }
 
@@ -213,6 +223,7 @@ internal static class ModbusEncoder
             double v = scale is null ? doubles[i] : scale(doubles[i]);
             arr[i] = (uint)Math.Round(v);
         }
+
         return arr;
     }
 

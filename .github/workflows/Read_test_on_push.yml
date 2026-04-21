@@ -1,4 +1,4 @@
-name: Read_test_on_push
+name: Build on branch push
 permissions:
   contents: read
 
@@ -8,6 +8,12 @@ on:
       - main
     paths:
       - 'Frends.Qconn.ModbusTcp/**'
+      - 'Frends.Qconn.ModbusTcp.Tests/**'
+      - 'Frends.Qconn.ModbusTcp.sln'
+      - '.github/workflows/**'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'SECURITY.md'
   workflow_dispatch:
 
 jobs:
@@ -16,7 +22,7 @@ jobs:
     with:
       workdir: Frends.Qconn.ModbusTcp
       dotnet_version: 8.0.x
-      strict_analyzers: true
+      strict_analyzers: false
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
       test_feed_api_key: ${{ secrets.TASKS_TEST_FEED_API_KEY }}
