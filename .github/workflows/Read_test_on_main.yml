@@ -18,10 +18,9 @@ on:
 
 jobs:
   build:
-    uses: FrendsPlatform/FrendsTasks/.github/workflows/linux_build_main.yml@main
+    uses: ./.github/workflows/Public_build.yml
     with:
-      workdir: .
       dotnet_version: 8.0.x
-      strict_analyzers: false
+      publish_test_feed: false
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}

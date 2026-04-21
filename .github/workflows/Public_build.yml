@@ -1,0 +1,163 @@
+name: Public build
+
+on:
+  workflow_call:
+    inputs:
+      dotnet_version:
+        required: false
+        type: string
+        default: '8.0.x'
+      publish_test_feed:
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      badge_service_api_key:
+        required: false
+      test_feed_api_key:
+        required: false
+
+env:
+  ROSLYNATOR_VERSION: 0.10.1
+  NUGET_TEST_SOURCE_URL: https://pkgs.dev.azure.com/frends-platform/frends-tasks/_packaging/test/nuget/v3/index.json
+
+jobs:
+  build:
+    name: Build on ubuntu-22.04
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4.3.1
+        with:
+          dotnet-version: ${{ inputs.dotnet_version }}
+
+      - name: Enable global .NET tools
+        run: echo ~/.dotnet/tools >> "$GITHUB_PATH"
+
+      - name: Install Roslynator
+        run: dotnet tool install --global Roslynator.DotNet.Cli --version "${{ env.ROSLYNATOR_VERSION }}"
+
+      - name: Download FrendsTaskAnalyzers
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          mkdir .analyzers
+          latest=$(gh release list \
+            --repo 'FrendsPlatform/FrendsTasks' \
+            --json tagName \
+            --exclude-drafts \
+            --exclude-pre-releases \
+            --jq '[.[] | select(.tagName | startswith("analyzers-")) | .tagName] | first')
+          gh release download "$latest" \
+            --repo 'FrendsPlatform/FrendsTasks' \
+            --dir '.analyzers' \
+            --pattern '*.nupkg'
+          unzip -o -j -d '.analyzers' '.analyzers/*.nupkg' '*.dll'
+
+      - name: Build
+        run: dotnet build Frends.Qconn.ModbusTcp.sln --configuration Release
+
+      - name: Write .editorconfig
+        run: |
+          file=$(find . -name 'FrendsTaskMetadata.json' 2>/dev/null | head -n 1)
+          methods=$(jq -r '[.Tasks[].TaskMethod] | join(";")' "$file")
+          cat <<EOF >> .editorconfig
+          [*.cs]
+          frends_task_analyzers.task_methods = $methods
+          EOF
+
+      - name: Format
+        run: dotnet format Frends.Qconn.ModbusTcp.sln --verify-no-changes --verbosity detailed
+        continue-on-error: true
+
+      - name: Lint
+        run: |
+          while IFS= read -r proj; do
+            roslynator analyze \
+              --analyzer-assemblies '.analyzers' \
+              --verbosity detailed \
+              "$proj"
+          done < <(find . -name '*.csproj' -not -name '*.Tests.csproj')
+        continue-on-error: true
+
+      - name: Cleanup after analyzers
+        if: always()
+        run: |
+          if git ls-files --error-unmatch .editorconfig >/dev/null 2>&1; then
+            git restore .editorconfig
+          else
+            rm -f .editorconfig
+          fi
+          rm -rf .analyzers
+
+      - name: Test
+        run: dotnet test Frends.Qconn.ModbusTcp.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
+
+      - name: Summarize coverage
+        id: coverage
+        shell: bash
+        run: |
+          file=$(find . -name 'coverage.cobertura.xml' 2>/dev/null | head -n 1)
+
+          if [ -z "$file" ]; then
+            echo "## Test coverage" >> "$GITHUB_STEP_SUMMARY"
+            echo "Coverage report was not produced." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          line_rate=$(grep -oPm1 '(?<=line-rate=")[^"]+' "$file")
+          line_rate_pct=$(awk "BEGIN { printf \"%.0f\", $line_rate * 100 }")
+
+          echo "coverage=$line_rate_pct" >> "$GITHUB_OUTPUT"
+          echo "coverage_file=$file" >> "$GITHUB_OUTPUT"
+
+          echo "## Test coverage" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Line coverage:** $line_rate_pct%" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$line_rate_pct" -lt 80 ]; then
+            echo "Coverage is below 80%, but this workflow reports coverage without failing the build." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Pack
+        run: dotnet pack Frends.Qconn.ModbusTcp/Frends.Qconn.ModbusTcp.csproj --configuration Release --no-build --include-source --output artifacts
+
+      - name: Publish NuGet package(s) to test feed
+        if: ${{ inputs.publish_test_feed }}
+        env:
+          TEST_FEED_API_KEY: ${{ secrets.test_feed_api_key }}
+        run: |
+          if [ -z "$TEST_FEED_API_KEY" ]; then
+            echo "Skipping test feed publish because TASKS_TEST_FEED_API_KEY is not configured."
+            exit 0
+          fi
+
+          dotnet nuget push artifacts/*.nupkg \
+            --api-key "$TEST_FEED_API_KEY" \
+            --source "${{ env.NUGET_TEST_SOURCE_URL }}" \
+            --skip-duplicate
+
+      - name: Save coverage report
+        if: ${{ steps.coverage.outputs.coverage != '' }}
+        env:
+          BADGE_SERVICE_API_KEY: ${{ secrets.badge_service_api_key }}
+        run: |
+          if [ -z "$BADGE_SERVICE_API_KEY" ]; then
+            echo "Skipping coverage badge publish because BADGE_SERVICE_API_KEY is not configured."
+            exit 0
+          fi
+
+          json=$(printf '{"key":"%s","displayName":"%s","value":"%s"}' \
+            "${{ github.repository }}|${{ github.ref_name }}" \
+            "Coverage" \
+            "${{ steps.coverage.outputs.coverage }}%")
+
+          curl \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $BADGE_SERVICE_API_KEY" \
+            -d "$json" \
+            https://app-github-custom-badges.azurewebsites.net/Badge
