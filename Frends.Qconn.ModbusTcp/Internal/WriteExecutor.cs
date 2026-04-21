@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +12,7 @@ using NModbus;
 
 namespace Frends.Qconn.ModbusTcp.Internal;
 
-/// <summary>Shared execution pipeline for Write Tasks: WriteGuard → breaker → pool acquire → op →
+/// <summary>Shared execution pipeline for Write Tasks: WriteGuard → breaker → retry loop → pool acquire → op →
 /// audit → error mapping → WriteResult. Called by every public Write Task.</summary>
 internal static class WriteExecutor
 {
@@ -28,20 +30,71 @@ internal static class WriteExecutor
         WriteGuard.EnsureAllowed(options.AllowWrites);
 
         var totalSw = Stopwatch.StartNew();
-
         var key = new ConnectionKey(host, port, unitId,
             options.TransportMode, TransportSecurity.None, null, null);
         var breaker = BreakerRegistry.Get(key, options.CircuitBreaker);
 
-        if (options.CircuitBreaker.Enabled && !breaker.CanPass(BreakerRegistry.Clock))
+        var attempts = new List<AttemptRecord>();
+        int maxAttempts = Math.Max(1, options.Retry.MaxAttempts);
+        WriteResult? attemptResult = null;
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            var diag = MakeDiag(0, 0, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount);
-            var r = new WriteResult(new ErrorDetail(ErrorCategory.CircuitOpen, true,
-                $"Circuit open for {host}:{port}/UnitId={unitId}."), diag);
-            EmitAudit(host, port, unitId, operationName, functionCode, wireAddr, wireCount, valuesWritten, r);
-            return ThrowIfNeeded(r, options);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (options.CircuitBreaker.Enabled && !breaker.CanPass(BreakerRegistry.Clock))
+            {
+                var diag = MakeDiag(0, 0, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount);
+                attemptResult = new WriteResult(new ErrorDetail(ErrorCategory.CircuitOpen, true,
+                    $"Circuit open for {host}:{port}/UnitId={unitId}."), diag);
+                attempts.Add(new AttemptRecord(attempt, 0, ErrorCategory.CircuitOpen, attemptResult.Error!.Message));
+                break;
+            }
+
+            var attemptSw = Stopwatch.StartNew();
+            attemptResult = await DoOneWriteAsync(host, port, unitId, options, key, totalSw,
+                wireAddr, wireCount, op, cancellationToken).ConfigureAwait(false);
+
+            var category = attemptResult.Success ? ErrorCategory.None : attemptResult.Error!.Category;
+            var modbusCode = attemptResult.Error?.ModbusExceptionCode;
+            attempts.Add(new AttemptRecord(attempt, attemptSw.ElapsedMilliseconds, category,
+                attemptResult.Error?.Message, modbusCode));
+
+            if (attemptResult.Success)
+            {
+                breaker.RecordSuccess();
+                break;
+            }
+
+            if (CircuitBreaker.CountsAsFailure(category, modbusCode))
+                breaker.RecordFailure(BreakerRegistry.Clock);
+
+            if (attempt >= maxAttempts || !RetryExecutor.ShouldRetry(category, modbusCode, options.Retry))
+                break;
+
+            await RetryExecutor.DelayAsync(
+                RetryExecutor.ComputeBackoff(attempt, options.Retry), cancellationToken)
+                .ConfigureAwait(false);
         }
 
+        var finalDiag = RetryExecutor.AttachHistory(attemptResult!.Diagnostics, attempts, totalSw.ElapsedMilliseconds);
+        var final = attemptResult.Success
+            ? new WriteResult(attemptResult.WireRegistersWritten, finalDiag)
+            : new WriteResult(attemptResult.Error!, finalDiag);
+
+        EmitAudit(host, port, unitId, operationName, functionCode, wireAddr, wireCount, valuesWritten, final, attempts.Count);
+        return ThrowIfNeeded(final, options);
+    }
+
+    private static async Task<WriteResult> DoOneWriteAsync(
+        string host, int port, byte unitId,
+        WriteOptions options,
+        ConnectionKey key,
+        Stopwatch totalSw,
+        ushort wireAddr, ushort wireCount,
+        Func<IModbusMaster, Task> op,
+        CancellationToken cancellationToken)
+    {
         ModbusLease? lease;
         long connectTimeMs = 0;
         var acquireSw = Stopwatch.StartNew();
@@ -58,20 +111,14 @@ internal static class WriteExecutor
         {
             var category = ex.Message.StartsWith("Acquire timed out", StringComparison.Ordinal)
                 ? ErrorCategory.Backpressure : ErrorCategory.Timeout;
-            breaker.RecordFailure(BreakerRegistry.Clock);
-            var diag = MakeDiag(acquireSw.ElapsedMilliseconds, 0, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount);
-            var r = new WriteResult(new ErrorDetail(category, true, ex.Message), diag);
-            EmitAudit(host, port, unitId, operationName, functionCode, wireAddr, wireCount, valuesWritten, r);
-            return ThrowIfNeeded(r, options);
+            return new WriteResult(new ErrorDetail(category, true, ex.Message),
+                MakeDiag(acquireSw.ElapsedMilliseconds, 0, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
         }
         catch (SocketException ex)
         {
-            breaker.RecordFailure(BreakerRegistry.Clock);
-            var diag = MakeDiag(acquireSw.ElapsedMilliseconds, 0, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount);
-            var r = new WriteResult(new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
-                socketErrorCode: ex.SocketErrorCode.ToString()), diag);
-            EmitAudit(host, port, unitId, operationName, functionCode, wireAddr, wireCount, valuesWritten, r);
-            return ThrowIfNeeded(r, options);
+            return new WriteResult(new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
+                    socketErrorCode: ex.SocketErrorCode.ToString()),
+                MakeDiag(acquireSw.ElapsedMilliseconds, 0, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
         }
 
         await using (lease)
@@ -82,11 +129,8 @@ internal static class WriteExecutor
             try
             {
                 await op(lease.Master).ConfigureAwait(false);
-                breaker.RecordSuccess();
-                var diag = MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount);
-                var r = new WriteResult(wireCount, diag);
-                EmitAudit(host, port, unitId, operationName, functionCode, wireAddr, wireCount, valuesWritten, r);
-                return r;
+                return new WriteResult(wireCount,
+                    MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -101,39 +145,34 @@ internal static class WriteExecutor
             catch (TimeoutException ex)
             {
                 lease.Poison();
-                breaker.RecordFailure(BreakerRegistry.Clock);
-                var diag = MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount);
-                var r = new WriteResult(new ErrorDetail(ErrorCategory.Timeout, true, ex.Message), diag);
-                EmitAudit(host, port, unitId, operationName, functionCode, wireAddr, wireCount, valuesWritten, r);
-                return ThrowIfNeeded(r, options);
+                return new WriteResult(new ErrorDetail(ErrorCategory.Timeout, true, ex.Message),
+                    MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
             }
             catch (SocketException ex)
             {
                 lease.Poison();
-                breaker.RecordFailure(BreakerRegistry.Clock);
-                var diag = MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount);
-                var r = new WriteResult(new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
-                    socketErrorCode: ex.SocketErrorCode.ToString()), diag);
-                EmitAudit(host, port, unitId, operationName, functionCode, wireAddr, wireCount, valuesWritten, r);
-                return ThrowIfNeeded(r, options);
+                return new WriteResult(new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
+                        socketErrorCode: ex.SocketErrorCode.ToString()),
+                    MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
             }
             catch (SlaveException ex)
             {
-                if (CircuitBreaker.CountsAsFailure(ErrorCategory.ModbusException, ex.SlaveExceptionCode))
-                    breaker.RecordFailure(BreakerRegistry.Clock);
-                var diag = MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount);
-                var r = new WriteResult(new ErrorDetail(ErrorCategory.ModbusException, IsTransientModbus(ex.SlaveExceptionCode),
-                    ex.Message, modbusExceptionCode: ex.SlaveExceptionCode), diag);
-                EmitAudit(host, port, unitId, operationName, functionCode, wireAddr, wireCount, valuesWritten, r);
-                return ThrowIfNeeded(r, options);
+                return new WriteResult(new ErrorDetail(ErrorCategory.ModbusException, IsTransientModbus(ex.SlaveExceptionCode),
+                        ex.Message, modbusExceptionCode: ex.SlaveExceptionCode),
+                    MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
+            }
+            catch (IOException ex) when (ex.InnerException is SocketException inner)
+            {
+                lease.Poison();
+                return new WriteResult(new ErrorDetail(MapSocketCategory(inner), IsTransientSocket(inner), ex.Message,
+                        socketErrorCode: inner.SocketErrorCode.ToString()),
+                    MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
             }
             catch (Exception ex)
             {
                 lease.Poison();
-                var diag = MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount);
-                var r = new WriteResult(new ErrorDetail(ErrorCategory.Unexpected, false, ex.Message), diag);
-                EmitAudit(host, port, unitId, operationName, functionCode, wireAddr, wireCount, valuesWritten, r);
-                return ThrowIfNeeded(r, options);
+                return new WriteResult(new ErrorDetail(ErrorCategory.Unexpected, false, ex.Message),
+                    MakeDiag(connectTimeMs, opSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, host, port, unitId, wireAddr, wireCount));
             }
         }
     }
@@ -150,7 +189,7 @@ internal static class WriteExecutor
         new(connectMs, opMs, totalMs, host, port, unitId, wireAddr, wireCount);
 
     private static void EmitAudit(string host, int port, byte unitId, string operationName, int functionCode,
-        ushort wireAddr, ushort wireCount, object? valuesWritten, WriteResult result)
+        ushort wireAddr, ushort wireCount, object? valuesWritten, WriteResult result, int attemptCount)
     {
         var ctx = AuditRouter.AgentContext;
         AuditRouter.Emit(new ModbusAuditEvent
@@ -172,7 +211,7 @@ internal static class WriteExecutor
             Success = result.Success,
             ErrorCategory = result.Error?.Category.ToString(),
             ModbusExceptionCode = result.Error?.ModbusExceptionCode,
-            AttemptCount = 1,
+            AttemptCount = Math.Max(1, attemptCount),
             TotalTimeMs = result.Diagnostics.TotalTimeMs,
             ValuesWritten = valuesWritten,
         });

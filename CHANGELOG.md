@@ -1,10 +1,17 @@
 # Changelog
 
+## [2.0.6] - 2026-04-21
+
+### Fixed
+
+- **README**: `PoolStatistics.GetStatistics` result property names corrected in Recipe 8 and the Task Reference table. `ConnectionsPerDevice` → `PerDevice`; `ConnectionCount` (per-device) → `Connections`; `IdleSinceUtc` (per-device) → `LastUsedUtc`. `TotalOperations` and `TotalErrors` are per-device fields on each `PerDevice[]` entry, not top-level properties. Added the missing top-level `ActiveConnections` and `IdleConnections` fields to both locations.
+- **Diagram** (Diagram 1 — Product Overview): WriteGuard safety note previously described a non-existent environment variable `ModbusWritesAllowed`. Corrected to describe the actual mechanism: `Options.AllowWrites` is a task parameter set to a Frends Environment Variable (e.g. `#env.Modbus.AllowWrites`) in the Process editor.
+
 ## [2.0.0] - 2026-04-20
 
 ### Added
 
-- **Write Tasks**: `Frends.Qconn.ModbusTcp.Write.WriteSingleCoil`, `WriteSingleRegister`, `WriteMultiple`, `ReadWriteMultiple`, and `WriteBatch`. All writes are gated by the `ModbusWritesAllowed` Frends Environment Variable (see SECURITY.md); setting it to `false` blocks every write at Task entry before any TCP socket is opened.
+- **Write Tasks**: `Frends.Qconn.ModbusTcp.Write.WriteSingleCoil`, `WriteSingleRegister`, `WriteMultiple`, `ReadWriteMultiple`, and `WriteBatch`. All writes are gated by `Options.AllowWrites` (see SECURITY.md); the recommended pattern is to set it via the `#env.Modbus.AllowWrites` Frends Environment Variable so that setting it to `false` blocks every write at Task entry before any TCP socket is opened.
 - **Connection pool**: Transparent Agent-wide TCP connection pool keyed by (Host, Port, UnitId, TransportMode, TLS fingerprint). Reused across `Read`, `ReadBatch`, and all Write Tasks. Configured via `Options.Pool`. Agent-wide caps via `ModbusTcp.MaxTotalConnections` (default 200) and `ModbusTcp.MaxConnectionsPerDevice` (default 1). Background idle eviction every 30s.
 - **Circuit breaker**: Per-device three-state (Closed / Open / HalfOpen) breaker. Configured via `Options.CircuitBreaker`. Enabled by default with a 5-consecutive-failure threshold and a 30-second Open duration. Modbus exception codes 1/2/3 (client bugs) do not count as failures.
 - **Retry**: Per-operation retry with exponential-with-jitter backoff. Configured via `Options.Retry`. **Default `MaxAttempts = 1`** preserves v1 single-shot behavior; set to 3+ to enable retry of transient failures. Classification via `Options.Retry.RetryOn` bit mask.

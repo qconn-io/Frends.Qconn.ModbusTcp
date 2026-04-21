@@ -2,7 +2,7 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <LangVersion>latest</LangVersion>
-        <Version>2.0.5</Version>
+        <Version>2.0.6</Version>
         <PackageId>Frends.Qconn.ModbusTcp</PackageId>
         <AssemblyName>Frends.Qconn.ModbusTcp</AssemblyName>
         <RootNamespace>Frends.Qconn.ModbusTcp</RootNamespace>
@@ -14,6 +14,7 @@
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <Description>Read and write values on Modbus TCP slave devices. v2 adds writes, connection pooling, circuit breaker, retry, audit logging, and OpenTelemetry primitives.</Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageProjectUrl>https://frends.com/</PackageProjectUrl>
         <RepositoryUrl>https://github.com/FrendsPlatform/Frends.Qconn.ModbusTcp</RepositoryUrl>
         <Nullable>enable</Nullable>
@@ -36,6 +37,7 @@
     <ItemGroup>
         <Content Include="migration.json" PackagePath="/" Pack="true"/>
         <Content Include="../CHANGELOG.md" PackagePath="/" Pack="true"/>
+        <Content Include="../README.md" PackagePath="/" Pack="true"/>
         <Content Include="FrendsTaskMetadata.json"
                  Pack="true"
                  PackagePath="/"

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Frends.Qconn.ModbusTcp.Common.Definitions;
 using Frends.Qconn.ModbusTcp.Read.Definitions;
 
 namespace Frends.Qconn.ModbusTcp.Internal;
@@ -63,4 +65,19 @@ internal static class RetryExecutor
         new(() => new Random(Guid.NewGuid().GetHashCode()));
 
     public static Task DelayAsync(TimeSpan duration, CancellationToken ct) => Delay(duration, ct);
+
+    /// <summary>Returns a new Diagnostics with AttemptHistory and corrected TotalTimeMs attached.
+    /// Returns <paramref name="original"/> unchanged when only one attempt ran (preserves v1 shape).</summary>
+    public static Diagnostics AttachHistory(Diagnostics original, IReadOnlyList<AttemptRecord> attempts, long totalMs)
+    {
+        if (attempts.Count <= 1) return original;
+        return new Diagnostics(
+            original.ConnectTimeMs, original.ReadTimeMs, totalMs,
+            original.Host, original.Port, original.UnitId,
+            original.WireStartAddress, original.WireRegisterCount,
+            attempts.Count)
+        {
+            AttemptHistory = attempts,
+        };
+    }
 }

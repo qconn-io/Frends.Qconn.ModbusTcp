@@ -67,13 +67,13 @@ Use `Admin.CircuitState.GetState` to confirm the breaker is Closed before writin
 | Host | `192.168.1.10` |
 | StartAddress | `100` |
 | ValueType | `Float32` |
-| Values | `[23.5]` |
+| Value | `23.5` |
 
 **Step 3 — Check the result**
 
 ```
-[WriteSetpoint].result.Success         → true/false
-[WriteSetpoint].result.RegistersWritten → number of registers written
+[WriteSetpoint].result.Success              → true/false
+[WriteSetpoint].result.WireRegistersWritten → number of registers written
 [WriteSetpoint].result.Error           → populated only when Success is false
 ```
 
@@ -164,7 +164,7 @@ Writes a temperature setpoint to a Siemens S7 holding register.
     "UnitId": 1,
     "StartAddress": 100,
     "ValueType": "Float32",
-    "Values": [75.0]
+    "Value": 75.0
   },
   "Options": {
     "ByteOrder": "BigEndian"
@@ -175,8 +175,8 @@ Writes a temperature setpoint to a Siemens S7 holding register.
 **Step 2 — check the result**
 
 ```
-[WriteTemp].result.Success           → must be true before assuming the device accepted it
-[WriteTemp].result.RegistersWritten  → should be 2 (one Float32 = two registers)
+[WriteTemp].result.Success                → must be true before assuming the device accepted it
+[WriteTemp].result.WireRegistersWritten   → should be 2 (one Float32 = two registers)
 ```
 
 > **Note:** `ThrowOnFailure` defaults to `true` for all Write tasks. Remove the check step and rely on the Process exception path if that suits your flow. Switch to `false` only when you need to inspect the error and continue.
@@ -194,7 +194,7 @@ Turns coil 4 on, waits, then turns it off. Useful for pulse outputs or one-shot 
   "Input": {
     "Host": "192.168.1.30",
     "StartAddress": 4,
-    "Values": [true]
+    "Value": true
   }
 }
 ```
@@ -203,7 +203,7 @@ Turns coil 4 on, waits, then turns it off. Useful for pulse outputs or one-shot 
 
 **Step 3 — Write.WriteSingleCoil.WriteData (OFF)**
 
-Same config as Step 1 but `"Values": [false]`.
+Same config as Step 1 but `"Value": false`.
 
 ---
 
@@ -218,10 +218,9 @@ Reads the current setpoint, adds an offset, and writes back — all in a single 
   "Input": {
     "Host": "192.168.1.10",
     "ReadStartAddress": 200,
-    "ReadCount": 2,
+    "ReadRegisterCount": 2,
     "WriteStartAddress": 200,
-    "ValueType": "Float32",
-    "Values": [82.5]
+    "WriteRegisters": [100, 200]
   }
 }
 ```
@@ -229,8 +228,8 @@ Reads the current setpoint, adds an offset, and writes back — all in a single 
 **Step 2 — use the read-back to confirm**
 
 ```
-[AtomicUpdate].result.ReadData.FirstValue   → value that was in the register before the write
-[AtomicUpdate].result.Success               → overall success flag
+[AtomicUpdate].result.ReadRegisters   → raw register values read before the write
+[AtomicUpdate].result.Success         → overall success flag
 ```
 
 Use this pattern when two Processes share a device and you need to avoid a read–compute–write race.
@@ -335,9 +334,9 @@ No input required. Returns:
 
 ```
 [PoolStats].result.TotalConnections        → active pooled connections across all devices
-[PoolStats].result.ConnectionsPerDevice    → list of (Host, Port, UnitId, Count, IdleSince)
-[PoolStats].result.TotalOperations         → cumulative operation count since Agent start
-[PoolStats].result.TotalErrors             → cumulative error count
+[PoolStats].result.ActiveConnections       → connections currently serving an operation
+[PoolStats].result.IdleConnections         → connections sitting idle in the pool
+[PoolStats].result.PerDevice               → array; each entry has Host, Port, UnitId, Connections, TotalOperations, TotalErrors, LastUsedUtc
 ```
 
 **Step 2 — Admin.CircuitState.GetState** (repeat per device)
@@ -571,7 +570,8 @@ All Write tasks share the same base Input fields:
 | DataType | ModbusDataType | `HoldingRegisters` | HoldingRegisters or Coils (task-dependent) |
 | StartAddress | ushort | `0` | First register/coil address |
 | ValueType | ModbusValueType | `Raw` | Encoding type |
-| Values | object[] | — | Values to write |
+| Value | object | — | **WriteSingleRegister** / **WriteSingleCoil**: single value to write (`object` or `bool`) |
+| Values | object[] | — | **WriteMultiple** / **WriteBatch**: array of values to write |
 
 Write tasks use `WriteOptions`, which extends the read `Options` with two changed defaults:
 
@@ -585,13 +585,13 @@ Write tasks use `WriteOptions`, which extends the read `Options` with two change
 | Name | Type | Description |
 |------|------|-------------|
 | Success | bool | True if write succeeded |
-| RegistersWritten | int | Number of registers written to the device |
+| WireRegistersWritten | ushort | Number of 16-bit registers written on the wire |
 | Error | ErrorDetail | Populated on failure |
-| Diagnostics | Diagnostics | ConnectTimeMs, WriteTimeMs, TotalTimeMs |
+| Diagnostics | Diagnostics | ConnectTimeMs, ReadTimeMs, TotalTimeMs |
 
 #### WriteSingleCoil — FC05
 
-Writes one boolean value to one coil. `Values` must contain exactly one `bool`.
+Writes one boolean value to one coil via `Input.Value` (a single `bool`).
 
 #### WriteSingleRegister — FC06
 
@@ -603,7 +603,7 @@ Writes a contiguous block of coils (FC15) or registers (FC16). `DataType` select
 
 #### ReadWriteMultiple — FC23
 
-Reads one register block and writes another in a single atomic transaction. Input has two address fields: `ReadStartAddress` + `ReadCount` for the read portion, and `StartAddress` for the write portion. The result includes both `ReadData` (a `ReadOutcome`) and the standard `WriteResult` fields.
+Reads one register block and writes another in a single atomic transaction. Input has two address fields: `ReadStartAddress` + `ReadRegisterCount` for the read portion, and `WriteStartAddress` + `WriteRegisters` (ushort[]) for the write portion. The result includes `ReadRegisters` (ushort[]) alongside the standard `WriteResult` fields.
 
 #### WriteBatch
 
@@ -624,9 +624,9 @@ No input. Returns a snapshot of the connection pool:
 | Field | Description |
 |-------|-------------|
 | TotalConnections | Active pooled connections across all devices |
-| ConnectionsPerDevice | Per-device breakdown (Host, Port, UnitId, ConnectionCount, IdleSinceUtc) |
-| TotalOperations | Cumulative operations since Agent start |
-| TotalErrors | Cumulative errors since Agent start |
+| ActiveConnections | Connections currently serving an operation |
+| IdleConnections | Connections sitting idle in the pool |
+| PerDevice | Per-device breakdown array — each entry: Host, Port, UnitId, Connections, TotalOperations, TotalErrors, LastUsedUtc |
 
 #### CircuitState.GetState
 

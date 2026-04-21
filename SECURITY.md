@@ -23,7 +23,7 @@ Every Write Task checks `Options.AllowWrites` as its very first step, before any
 
 The Frends runtime resolves `#env.Modbus.AllowWrites` to the Environment Variable value at execution time, so the same Process definition behaves differently on read-only vs. control-plane Environments without any code change.
 
-**Recommended Production configuration**: set `ModbusWritesAllowed=false` on every Environment that is not specifically authorized to write. Enable (`true`) only on dedicated control-plane Environments. The default when no value is provided in Options is `true`, preserving v1 backward compatibility; Production deployments should configure the variable explicitly.
+**Recommended Production configuration**: set `#env.Modbus.AllowWrites` to `false` (via Environments → Variables, Group `Modbus`, Variable `AllowWrites`) on every Environment that is not specifically authorized to write. Enable (`true`) only on dedicated control-plane Environments. The default when no value is provided in Options is `true`, preserving v1 backward compatibility; Production deployments should configure the variable explicitly.
 
 ### Write default behaviors
 

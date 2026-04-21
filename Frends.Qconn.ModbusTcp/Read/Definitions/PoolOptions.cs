@@ -19,6 +19,13 @@ public class PoolOptions
     [DefaultValue(60000)]
     public int IdleTimeoutMs { get; set; } = 60000;
 
+    /// <summary>Maximum simultaneous TCP connections to the same device (Host + Port + UnitId).
+    /// Default 1. Increase only if the target device explicitly supports concurrent Modbus connections.
+    /// When 0, falls back to the <c>ModbusTcp.MaxConnectionsPerDevice</c> Frends Environment Variable (default 1).</summary>
+    /// <example>1</example>
+    [DefaultValue(1)]
+    public int MaxConnectionsPerDevice { get; set; } = 1;
+
     /// <summary>Max time in milliseconds to wait for a per-device connection slot when it is busy.
     /// Default 5000. Exceeding this surfaces ErrorCategory.Backpressure.</summary>
     /// <example>5000</example>

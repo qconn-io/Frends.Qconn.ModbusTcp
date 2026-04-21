@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -262,6 +263,13 @@ public static class Read
                 return Fail(new ErrorDetail(ErrorCategory.DecodingError, false, ex.Message),
                     connectTimeMs, readSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount, 1);
             }
+            catch (IOException ex) when (ex.InnerException is SocketException inner)
+            {
+                lease.Poison();
+                return Fail(new ErrorDetail(MapSocketCategory(inner), IsTransientSocket(inner), ex.Message,
+                        socketErrorCode: inner.SocketErrorCode.ToString()),
+                    connectTimeMs, readSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount, 1);
+            }
             catch (Exception ex)
             {
                 lease.Poison();
@@ -282,17 +290,8 @@ public static class Read
 
     private static Result AttachHistory(Result r, List<AttemptRecord> attempts, long totalMs)
     {
-        // Only attach history when more than one attempt ran (keeps v1 Diagnostics shape for default single-shot).
-        if (attempts.Count <= 1) return r;
-
-        var d = r.Diagnostics;
-        var newDiag = new Diagnostics(
-            d.ConnectTimeMs, d.ReadTimeMs, totalMs,
-            d.Host, d.Port, d.UnitId, d.WireStartAddress, d.WireRegisterCount,
-            attempts.Count)
-        {
-            AttemptHistory = attempts.AsReadOnly(),
-        };
+        var newDiag = RetryExecutor.AttachHistory(r.Diagnostics, attempts, totalMs);
+        if (ReferenceEquals(newDiag, r.Diagnostics)) return r;
         return r.Success
             ? new Result(r.Data!, r.RawRegisters, newDiag)
             : new Result(r.Error!, newDiag);

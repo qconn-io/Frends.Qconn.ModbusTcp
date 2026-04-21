@@ -25,6 +25,12 @@ internal sealed class PooledConnection : IAsyncDisposable
 
     public bool IsDisposed => Volatile.Read(ref _disposed) == 1;
 
+    /// <summary>True while a caller holds a lease on this connection (between TryEnterAsync and Release).</summary>
+    public bool InUse { get; private set; }
+
+    /// <summary>Idle-eviction budget in milliseconds, snapshotted from the last caller's PoolOptions.IdleTimeoutMs.</summary>
+    public int IdleBudgetMs { get; internal set; } = 60_000;
+
     public PooledConnection(ConnectionKey key, TcpClient tcpClient, IModbusMaster master, long connectTimeMs)
     {
         Key = key;
@@ -36,8 +42,12 @@ internal sealed class PooledConnection : IAsyncDisposable
 
     /// <summary>Tries to enter the per-connection gate within the given budget.
     /// Returns true on success — caller must call Release exactly once.</summary>
-    public async Task<bool> TryEnterAsync(int timeoutMs, CancellationToken cancellationToken) =>
-        await _gate.WaitAsync(timeoutMs, cancellationToken).ConfigureAwait(false);
+    public async Task<bool> TryEnterAsync(int timeoutMs, CancellationToken cancellationToken)
+    {
+        bool entered = await _gate.WaitAsync(timeoutMs, cancellationToken).ConfigureAwait(false);
+        if (entered) InUse = true;
+        return entered;
+    }
 
     /// <summary>Releases the per-connection gate. Updates last-used timestamp and counters.</summary>
     public void Release(bool success)
@@ -49,6 +59,7 @@ internal sealed class PooledConnection : IAsyncDisposable
             TotalErrors++;
             LastErrorUtc = LastUsedUtc;
         }
+        InUse = false;
         _gate.Release();
     }
 

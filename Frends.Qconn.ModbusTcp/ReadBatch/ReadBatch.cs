@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,10 +20,10 @@ public static class ReadBatch
     /// <summary>
     /// Opens one TCP connection (or reuses a pooled one) and executes all reads in Input.Items sequentially.
     /// A Modbus exception on one item fails that item but does not abort the batch.
-    /// A socket-level failure aborts the entire batch and sets BatchResult.Success = false.
+    /// A socket-level failure aborts the entire batch and may trigger a retry (the whole batch retries as a unit).
     /// </summary>
     /// <param name="input">Connection info and list of register reads to perform.</param>
-    /// <param name="options">Timeout, byte order, pool, and error-handling options (shared across all items).</param>
+    /// <param name="options">Timeout, byte order, pool, retry, and error-handling options (shared across all items).</param>
     /// <param name="cancellationToken">Propagated from the Frends Agent.</param>
     /// <returns>BatchResult with per-item outcomes and batch-level diagnostics.</returns>
     public static async Task<BatchResult> ReadBatchData(
@@ -31,21 +32,69 @@ public static class ReadBatch
         CancellationToken cancellationToken)
     {
         var totalSw = Stopwatch.StartNew();
-        var items = new Dictionary<string, ReadOutcome>();
-        long connectTimeMs = 0;
-
         var key = new ConnectionKey(input.Host, input.Port, input.UnitId,
             options.TransportMode, TransportSecurity.None, null, null);
         var breaker = BreakerRegistry.Get(key, options.CircuitBreaker);
 
-        // Breaker short-circuit before opening a socket.
-        if (options.CircuitBreaker.Enabled && !breaker.CanPass(BreakerRegistry.Clock))
+        var attempts = new List<AttemptRecord>();
+        int maxAttempts = Math.Max(1, options.Retry.MaxAttempts);
+        BatchResult? attemptResult = null;
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            var diag = MakeDiag(0, 0, totalSw.ElapsedMilliseconds, input, 0, 0);
-            return Audit(input, new BatchResult(items, diag,
-                new ErrorDetail(ErrorCategory.CircuitOpen, true,
-                    $"Circuit open for {input.Host}:{input.Port}/UnitId={input.UnitId}.")));
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (options.CircuitBreaker.Enabled && !breaker.CanPass(BreakerRegistry.Clock))
+            {
+                var diag = MakeDiag(0, 0, totalSw.ElapsedMilliseconds, input, 0, 0);
+                attemptResult = new BatchResult(new Dictionary<string, ReadOutcome>(), diag,
+                    new ErrorDetail(ErrorCategory.CircuitOpen, true,
+                        $"Circuit open for {input.Host}:{input.Port}/UnitId={input.UnitId}."));
+                attempts.Add(new AttemptRecord(attempt, 0, ErrorCategory.CircuitOpen, attemptResult.Error!.Message));
+                break;
+            }
+
+            var attemptSw = Stopwatch.StartNew();
+            attemptResult = await DoOneBatchAsync(input, options, key, totalSw, cancellationToken)
+                .ConfigureAwait(false);
+
+            var category = attemptResult.Success ? ErrorCategory.None : attemptResult.Error!.Category;
+            var modbusCode = attemptResult.Error?.ModbusExceptionCode;
+            attempts.Add(new AttemptRecord(attempt, attemptSw.ElapsedMilliseconds, category,
+                attemptResult.Error?.Message, modbusCode));
+
+            if (attemptResult.Success)
+            {
+                breaker.RecordSuccess();
+                break;
+            }
+
+            if (CircuitBreaker.CountsAsFailure(category, modbusCode))
+                breaker.RecordFailure(BreakerRegistry.Clock);
+
+            if (attempt >= maxAttempts || !RetryExecutor.ShouldRetry(category, modbusCode, options.Retry))
+                break;
+
+            await RetryExecutor.DelayAsync(
+                RetryExecutor.ComputeBackoff(attempt, options.Retry), cancellationToken)
+                .ConfigureAwait(false);
         }
+
+        var finalDiag = RetryExecutor.AttachHistory(attemptResult!.Diagnostics, attempts, totalSw.ElapsedMilliseconds);
+        var final = attemptResult.Success
+            ? new BatchResult(attemptResult.Items, finalDiag)
+            : new BatchResult(attemptResult.Items, finalDiag, attemptResult.Error!);
+
+        return Audit(input, final, attempts.Count);
+    }
+
+    private static async Task<BatchResult> DoOneBatchAsync(
+        BatchInput input, Options options, ConnectionKey key,
+        Stopwatch totalSw,
+        CancellationToken cancellationToken)
+    {
+        var items = new Dictionary<string, ReadOutcome>();
+        long connectTimeMs = 0;
 
         ModbusLease? lease;
         var acquireSw = Stopwatch.StartNew();
@@ -62,18 +111,15 @@ public static class ReadBatch
         {
             var category = ex.Message.StartsWith("Acquire timed out", StringComparison.Ordinal)
                 ? ErrorCategory.Backpressure : ErrorCategory.Timeout;
-            breaker.RecordFailure(BreakerRegistry.Clock);
             var diag = MakeDiag(acquireSw.ElapsedMilliseconds, 0, totalSw.ElapsedMilliseconds, input, 0, 0);
-            return Audit(input, new BatchResult(items, diag,
-                new ErrorDetail(category, true, ex.Message)));
+            return new BatchResult(items, diag, new ErrorDetail(category, true, ex.Message));
         }
         catch (SocketException ex)
         {
-            breaker.RecordFailure(BreakerRegistry.Clock);
             var diag = MakeDiag(acquireSw.ElapsedMilliseconds, 0, totalSw.ElapsedMilliseconds, input, 0, 0);
-            return Audit(input, new BatchResult(items, diag,
+            return new BatchResult(items, diag,
                 new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
-                    socketErrorCode: ex.SocketErrorCode.ToString())));
+                    socketErrorCode: ex.SocketErrorCode.ToString()));
         }
 
         await using (lease)
@@ -122,7 +168,7 @@ public static class ReadBatch
                         decoded = ModbusDecoder.Decode(regs, item.ValueType, options.ByteOrder,
                             item.NumberOfValues, item.Scale, item.Offset);
                     }
-                    else // InputRegisters
+                    else
                     {
                         ushort[] regs = await lease.Master.ReadInputRegistersAsync(input.UnitId, wireAddr, wireCount).ConfigureAwait(false);
                         rawRegisters = regs;
@@ -155,32 +201,35 @@ public static class ReadBatch
                 catch (TimeoutException ex)
                 {
                     lease.Poison();
-                    breaker.RecordFailure(BreakerRegistry.Clock);
                     var diag = MakeDiag(connectTimeMs, readSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount);
-                    return Audit(input, new BatchResult(items, diag,
-                        new ErrorDetail(ErrorCategory.Timeout, true, ex.Message)));
+                    return new BatchResult(items, diag, new ErrorDetail(ErrorCategory.Timeout, true, ex.Message));
                 }
                 catch (SocketException ex)
                 {
                     lease.Poison();
-                    breaker.RecordFailure(BreakerRegistry.Clock);
                     var diag = MakeDiag(connectTimeMs, readSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount);
-                    return Audit(input, new BatchResult(items, diag,
+                    return new BatchResult(items, diag,
                         new ErrorDetail(MapSocketCategory(ex), IsTransientSocket(ex), ex.Message,
-                            socketErrorCode: ex.SocketErrorCode.ToString())));
+                            socketErrorCode: ex.SocketErrorCode.ToString()));
+                }
+                catch (IOException ex) when (ex.InnerException is SocketException inner)
+                {
+                    lease.Poison();
+                    var diag = MakeDiag(connectTimeMs, readSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount);
+                    return new BatchResult(items, diag,
+                        new ErrorDetail(MapSocketCategory(inner), IsTransientSocket(inner), ex.Message,
+                            socketErrorCode: inner.SocketErrorCode.ToString()));
                 }
                 catch (Exception ex)
                 {
                     lease.Poison();
                     var diag = MakeDiag(connectTimeMs, readSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, input, wireAddr, wireCount);
-                    return Audit(input, new BatchResult(items, diag,
-                        new ErrorDetail(ErrorCategory.Unexpected, false, ex.Message)));
+                    return new BatchResult(items, diag, new ErrorDetail(ErrorCategory.Unexpected, false, ex.Message));
                 }
             }
 
-            breaker.RecordSuccess();
             var finalDiag = MakeDiag(connectTimeMs, 0, totalSw.ElapsedMilliseconds, input, 0, 0);
-            return Audit(input, new BatchResult(items, finalDiag));
+            return new BatchResult(items, finalDiag);
         }
     }
 
@@ -188,7 +237,7 @@ public static class ReadBatch
         BatchInput input, ushort wireAddr, ushort wireCount) =>
         new(connectMs, readMs, totalMs, input.Host, input.Port, input.UnitId, wireAddr, wireCount);
 
-    private static BatchResult Audit(BatchInput input, BatchResult result)
+    private static BatchResult Audit(BatchInput input, BatchResult result, int attemptCount)
     {
         var ctx = AuditRouter.AgentContext;
         AuditRouter.Emit(new ModbusAuditEvent
@@ -210,7 +259,7 @@ public static class ReadBatch
             Success = result.Success,
             ErrorCategory = result.Error?.Category.ToString(),
             ModbusExceptionCode = result.Error?.ModbusExceptionCode,
-            AttemptCount = 1,
+            AttemptCount = Math.Max(1, attemptCount),
             TotalTimeMs = result.Diagnostics.TotalTimeMs,
             ValuesWritten = null,
         });

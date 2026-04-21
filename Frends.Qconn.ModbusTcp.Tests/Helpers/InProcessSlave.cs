@@ -19,16 +19,15 @@ internal sealed class InProcessSlave : IDisposable
     /// <summary>The slave data store — use to pre-populate holding registers, coils, etc.</summary>
     public ISlaveDataStore DataStore { get; }
 
-    public InProcessSlave(byte unitId = 1)
+    public InProcessSlave(byte unitId = 1) : this(unitId, new BoundedSlaveDataStore(maxAddress: 1000)) { }
+
+    public InProcessSlave(byte unitId, ISlaveDataStore dataStore)
     {
         _listener = new TcpListener(IPAddress.Loopback, 0);
         _listener.Start();
         Port = ((IPEndPoint)_listener.LocalEndpoint).Port;
 
         var factory = new ModbusFactory();
-        // BoundedSlaveDataStore throws Modbus exception 2 for addresses >= 1000,
-        // enabling exception-path tests while keeping happy-path tests working.
-        var dataStore = new BoundedSlaveDataStore(maxAddress: 1000);
         var slave = factory.CreateSlave(unitId, dataStore);
         DataStore = slave.DataStore;
 
